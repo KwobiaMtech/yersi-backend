@@ -1,0 +1,574 @@
+{
+  "info": {
+    "name": "Laundry Service API",
+    "description": "Complete API documentation for the Laundry Service Backend",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{jwt_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "jwt_token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Check API health status and dependencies"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/health",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "health"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": \"ok\",\n  \"timestamp\": \"2024-01-01T00:00:00.000Z\",\n  \"uptime\": 123.45,\n  \"database\": {\n    \"status\": \"connected\",\n    \"name\": \"laundry-service\"\n  },\n  \"redis\": {\n    \"status\": \"connected\"\n  },\n  \"memory\": {\n    \"rss\": 50331648,\n    \"heapTotal\": 20971520,\n    \"heapUsed\": 15728640,\n    \"external\": 1048576,\n    \"arrayBuffers\": 524288\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('jwt_token', response.token);",
+                  "    pm.collectionVariables.set('user_id', response.user.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"SecurePass123!\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"phone\": \"+233123456789\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"user\": {\n    \"id\": \"507f1f77bcf86cd799439011\",\n    \"email\": \"john.doe@example.com\",\n    \"firstName\": \"John\",\n    \"lastName\": \"Doe\",\n    \"phone\": \"+233123456789\",\n    \"credits\": 0,\n    \"createdAt\": \"2024-01-01T00:00:00.000Z\"\n  },\n  \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('jwt_token', response.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"SecurePass123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"user\": {\n    \"id\": \"507f1f77bcf86cd799439011\",\n    \"email\": \"john.doe@example.com\",\n    \"firstName\": \"John\",\n    \"lastName\": \"Doe\"\n  },\n  \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Services",
+      "item": [
+        {
+          "name": "Get All Services",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/services",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "services"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "body": "[\n  {\n    \"id\": \"507f1f77bcf86cd799439011\",\n    \"name\": \"Wash & Fold\",\n    \"description\": \"Basic washing and folding service\",\n    \"basePrice\": 15.00,\n    \"estimatedTime\": \"24-48 hours\",\n    \"isActive\": true,\n    \"createdAt\": \"2024-01-01T00:00:00.000Z\"\n  },\n  {\n    \"id\": \"507f1f77bcf86cd799439012\",\n    \"name\": \"Dry Cleaning\",\n    \"description\": \"Professional dry cleaning service\",\n    \"basePrice\": 25.00,\n    \"estimatedTime\": \"48-72 hours\",\n    \"isActive\": true,\n    \"createdAt\": \"2024-01-01T00:00:00.000Z\"\n  },\n  {\n    \"id\": \"507f1f77bcf86cd799439013\",\n    \"name\": \"Express Wash\",\n    \"description\": \"Same-day washing service\",\n    \"basePrice\": 30.00,\n    \"estimatedTime\": \"4-6 hours\",\n    \"isActive\": true,\n    \"createdAt\": \"2024-01-01T00:00:00.000Z\"\n  }\n]"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Vendors",
+      "item": [
+        {
+          "name": "Search Vendors by Location",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/vendors/search?latitude=5.6037&longitude=-0.1870&serviceId=507f1f77bcf86cd799439011&radius=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "vendors",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "latitude",
+                  "value": "5.6037",
+                  "description": "Latitude coordinate"
+                },
+                {
+                  "key": "longitude",
+                  "value": "-0.1870",
+                  "description": "Longitude coordinate"
+                },
+                {
+                  "key": "serviceId",
+                  "value": "507f1f77bcf86cd799439011",
+                  "description": "Service ID to filter by"
+                },
+                {
+                  "key": "radius",
+                  "value": "10",
+                  "description": "Search radius in kilometers"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "body": "[\n  {\n    \"id\": \"507f1f77bcf86cd799439021\",\n    \"name\": \"Clean Express Laundromat\",\n    \"description\": \"Fast and reliable laundry services\",\n    \"address\": {\n      \"street\": \"123 Oxford Street\",\n      \"city\": \"Accra\",\n      \"region\": \"Greater Accra\",\n      \"postalCode\": \"GA-123-4567\"\n    },\n    \"location\": {\n      \"type\": \"Point\",\n      \"coordinates\": [-0.1870, 5.6037]\n    },\n    \"phone\": \"+233201234567\",\n    \"email\": \"info@cleanexpress.com\",\n    \"rating\": 4.5,\n    \"reviewCount\": 128,\n    \"services\": [\"507f1f77bcf86cd799439011\", \"507f1f77bcf86cd799439012\"],\n    \"operatingHours\": {\n      \"monday\": \"08:00-18:00\",\n      \"tuesday\": \"08:00-18:00\",\n      \"wednesday\": \"08:00-18:00\",\n      \"thursday\": \"08:00-18:00\",\n      \"friday\": \"08:00-18:00\",\n      \"saturday\": \"09:00-16:00\",\n      \"sunday\": \"closed\"\n    },\n    \"distance\": 2.5,\n    \"isActive\": true\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Get Vendor by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/vendors/507f1f77bcf86cd799439021",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "vendors",
+                "507f1f77bcf86cd799439021"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"id\": \"507f1f77bcf86cd799439021\",\n  \"name\": \"Clean Express Laundromat\",\n  \"description\": \"Fast and reliable laundry services\",\n  \"address\": {\n    \"street\": \"123 Oxford Street\",\n    \"city\": \"Accra\",\n    \"region\": \"Greater Accra\",\n    \"postalCode\": \"GA-123-4567\"\n  },\n  \"location\": {\n    \"type\": \"Point\",\n    \"coordinates\": [-0.1870, 5.6037]\n  },\n  \"phone\": \"+233201234567\",\n  \"email\": \"info@cleanexpress.com\",\n  \"rating\": 4.5,\n  \"reviewCount\": 128,\n  \"services\": [\n    {\n      \"id\": \"507f1f77bcf86cd799439011\",\n      \"name\": \"Wash & Fold\",\n      \"price\": 15.00\n    }\n  ],\n  \"operatingHours\": {\n    \"monday\": \"08:00-18:00\",\n    \"tuesday\": \"08:00-18:00\",\n    \"wednesday\": \"08:00-18:00\",\n    \"thursday\": \"08:00-18:00\",\n    \"friday\": \"08:00-18:00\",\n    \"saturday\": \"09:00-16:00\",\n    \"sunday\": \"closed\"\n  },\n  \"isActive\": true,\n  \"createdAt\": \"2024-01-01T00:00:00.000Z\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "Calculate Order Total",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serviceId\": \"507f1f77bcf86cd799439011\",\n  \"vendorId\": \"507f1f77bcf86cd799439021\",\n  \"items\": [\n    {\n      \"itemId\": \"507f1f77bcf86cd799439031\",\n      \"quantity\": 3,\n      \"specialInstructions\": \"Handle with care\"\n    },\n    {\n      \"itemId\": \"507f1f77bcf86cd799439032\",\n      \"quantity\": 2\n    }\n  ],\n  \"promoCode\": \"SAVE10\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/orders/calculate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "orders",
+                "calculate"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"subtotal\": 45.00,\n  \"discount\": 4.50,\n  \"tax\": 4.05,\n  \"deliveryFee\": 5.00,\n  \"total\": 49.55,\n  \"breakdown\": [\n    {\n      \"itemId\": \"507f1f77bcf86cd799439031\",\n      \"name\": \"Shirt\",\n      \"quantity\": 3,\n      \"unitPrice\": 8.00,\n      \"subtotal\": 24.00\n    },\n    {\n      \"itemId\": \"507f1f77bcf86cd799439032\",\n      \"name\": \"Pants\",\n      \"quantity\": 2,\n      \"unitPrice\": 10.50,\n      \"subtotal\": 21.00\n    }\n  ],\n  \"promoCode\": {\n    \"code\": \"SAVE10\",\n    \"discountType\": \"percentage\",\n    \"discountValue\": 10,\n    \"appliedDiscount\": 4.50\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create Order",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serviceId\": \"507f1f77bcf86cd799439011\",\n  \"vendorId\": \"507f1f77bcf86cd799439021\",\n  \"items\": [\n    {\n      \"itemId\": \"507f1f77bcf86cd799439031\",\n      \"quantity\": 3,\n      \"specialInstructions\": \"Handle with care\"\n    }\n  ],\n  \"pickupAddress\": {\n    \"street\": \"456 Elm Street\",\n    \"city\": \"Accra\",\n    \"region\": \"Greater Accra\",\n    \"postalCode\": \"GA-456-7890\",\n    \"phone\": \"+233123456789\",\n    \"instructions\": \"Ring doorbell twice\"\n  },\n  \"deliveryAddress\": {\n    \"street\": \"789 Oak Avenue\",\n    \"city\": \"Accra\",\n    \"region\": \"Greater Accra\",\n    \"postalCode\": \"GA-789-0123\",\n    \"phone\": \"+233987654321\",\n    \"instructions\": \"Leave at front desk\"\n  },\n  \"preferredPickupTime\": \"2024-01-02T10:00:00.000Z\",\n  \"preferredDeliveryTime\": \"2024-01-03T16:00:00.000Z\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/orders",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "orders"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"id\": \"507f1f77bcf86cd799439041\",\n  \"orderNumber\": \"LD-2024-001\",\n  \"status\": \"pending\",\n  \"userId\": \"507f1f77bcf86cd799439011\",\n  \"serviceId\": \"507f1f77bcf86cd799439011\",\n  \"vendorId\": \"507f1f77bcf86cd799439021\",\n  \"items\": [\n    {\n      \"itemId\": \"507f1f77bcf86cd799439031\",\n      \"name\": \"Shirt\",\n      \"quantity\": 3,\n      \"unitPrice\": 8.00,\n      \"subtotal\": 24.00,\n      \"specialInstructions\": \"Handle with care\"\n    }\n  ],\n  \"pricing\": {\n    \"subtotal\": 24.00,\n    \"tax\": 2.16,\n    \"deliveryFee\": 5.00,\n    \"total\": 31.16\n  },\n  \"addresses\": {\n    \"pickup\": {\n      \"street\": \"456 Elm Street\",\n      \"city\": \"Accra\",\n      \"region\": \"Greater Accra\",\n      \"phone\": \"+233123456789\"\n    },\n    \"delivery\": {\n      \"street\": \"789 Oak Avenue\",\n      \"city\": \"Accra\",\n      \"region\": \"Greater Accra\",\n      \"phone\": \"+233987654321\"\n    }\n  },\n  \"timeline\": {\n    \"preferredPickupTime\": \"2024-01-02T10:00:00.000Z\",\n    \"preferredDeliveryTime\": \"2024-01-03T16:00:00.000Z\",\n    \"estimatedCompletion\": \"2024-01-03T14:00:00.000Z\"\n  },\n  \"createdAt\": \"2024-01-01T12:00:00.000Z\",\n  \"updatedAt\": \"2024-01-01T12:00:00.000Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get User Orders",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/orders",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "orders"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "body": "[\n  {\n    \"id\": \"507f1f77bcf86cd799439041\",\n    \"orderNumber\": \"LD-2024-001\",\n    \"status\": \"in_progress\",\n    \"serviceName\": \"Wash & Fold\",\n    \"vendorName\": \"Clean Express Laundromat\",\n    \"total\": 31.16,\n    \"itemCount\": 3,\n    \"createdAt\": \"2024-01-01T12:00:00.000Z\",\n    \"estimatedCompletion\": \"2024-01-03T14:00:00.000Z\"\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Get Order by ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/orders/507f1f77bcf86cd799439041",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "orders",
+                "507f1f77bcf86cd799439041"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"id\": \"507f1f77bcf86cd799439041\",\n  \"orderNumber\": \"LD-2024-001\",\n  \"status\": \"in_progress\",\n  \"statusHistory\": [\n    {\n      \"status\": \"pending\",\n      \"timestamp\": \"2024-01-01T12:00:00.000Z\",\n      \"note\": \"Order created\"\n    },\n    {\n      \"status\": \"confirmed\",\n      \"timestamp\": \"2024-01-01T13:00:00.000Z\",\n      \"note\": \"Order confirmed by vendor\"\n    },\n    {\n      \"status\": \"picked_up\",\n      \"timestamp\": \"2024-01-02T10:30:00.000Z\",\n      \"note\": \"Items picked up\"\n    },\n    {\n      \"status\": \"in_progress\",\n      \"timestamp\": \"2024-01-02T11:00:00.000Z\",\n      \"note\": \"Processing started\"\n    }\n  ],\n  \"service\": {\n    \"id\": \"507f1f77bcf86cd799439011\",\n    \"name\": \"Wash & Fold\"\n  },\n  \"vendor\": {\n    \"id\": \"507f1f77bcf86cd799439021\",\n    \"name\": \"Clean Express Laundromat\",\n    \"phone\": \"+233201234567\"\n  },\n  \"items\": [\n    {\n      \"itemId\": \"507f1f77bcf86cd799439031\",\n      \"name\": \"Shirt\",\n      \"quantity\": 3,\n      \"unitPrice\": 8.00,\n      \"subtotal\": 24.00,\n      \"specialInstructions\": \"Handle with care\"\n    }\n  ],\n  \"pricing\": {\n    \"subtotal\": 24.00,\n    \"tax\": 2.16,\n    \"deliveryFee\": 5.00,\n    \"total\": 31.16\n  },\n  \"addresses\": {\n    \"pickup\": {\n      \"street\": \"456 Elm Street\",\n      \"city\": \"Accra\",\n      \"region\": \"Greater Accra\",\n      \"phone\": \"+233123456789\"\n    },\n    \"delivery\": {\n      \"street\": \"789 Oak Avenue\",\n      \"city\": \"Accra\",\n      \"region\": \"Greater Accra\",\n      \"phone\": \"+233987654321\"\n    }\n  },\n  \"timeline\": {\n    \"preferredPickupTime\": \"2024-01-02T10:00:00.000Z\",\n    \"actualPickupTime\": \"2024-01-02T10:30:00.000Z\",\n    \"preferredDeliveryTime\": \"2024-01-03T16:00:00.000Z\",\n    \"estimatedCompletion\": \"2024-01-03T14:00:00.000Z\"\n  },\n  \"createdAt\": \"2024-01-01T12:00:00.000Z\",\n  \"updatedAt\": \"2024-01-02T11:00:00.000Z\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Items",
+      "item": [
+        {
+          "name": "Get Items by Service",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/items?serviceId=507f1f77bcf86cd799439011",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "items"
+              ],
+              "query": [
+                {
+                  "key": "serviceId",
+                  "value": "507f1f77bcf86cd799439011"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "body": "[\n  {\n    \"id\": \"507f1f77bcf86cd799439031\",\n    \"name\": \"Shirt\",\n    \"category\": \"Clothing\",\n    \"basePrice\": 8.00,\n    \"serviceId\": \"507f1f77bcf86cd799439011\",\n    \"description\": \"Regular shirt cleaning\",\n    \"isActive\": true\n  },\n  {\n    \"id\": \"507f1f77bcf86cd799439032\",\n    \"name\": \"Pants\",\n    \"category\": \"Clothing\",\n    \"basePrice\": 10.50,\n    \"serviceId\": \"507f1f77bcf86cd799439011\",\n    \"description\": \"Regular pants cleaning\",\n    \"isActive\": true\n  }\n]"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Payments",
+      "item": [
+        {
+          "name": "Initialize Payment",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderId\": \"507f1f77bcf86cd799439041\",\n  \"paymentMethod\": \"mobile_money\",\n  \"amount\": 31.16,\n  \"currency\": \"GHS\",\n  \"phoneNumber\": \"+233123456789\",\n  \"network\": \"mtn\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/payments/initialize",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payments",
+                "initialize"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"paymentId\": \"507f1f77bcf86cd799439051\",\n  \"status\": \"pending\",\n  \"paymentUrl\": \"https://payment-gateway.com/pay/abc123\",\n  \"reference\": \"PAY-2024-001\",\n  \"amount\": 31.16,\n  \"currency\": \"GHS\",\n  \"expiresAt\": \"2024-01-01T13:00:00.000Z\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get User Credits",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users/credits",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "credits"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"userId\": \"507f1f77bcf86cd799439011\",\n  \"credits\": 25.50,\n  \"currency\": \"GHS\",\n  \"lastUpdated\": \"2024-01-01T10:00:00.000Z\",\n  \"transactions\": [\n    {\n      \"id\": \"507f1f77bcf86cd799439061\",\n      \"type\": \"credit\",\n      \"amount\": 50.00,\n      \"description\": \"Account top-up\",\n      \"createdAt\": \"2023-12-30T15:00:00.000Z\"\n    },\n    {\n      \"id\": \"507f1f77bcf86cd799439062\",\n      \"type\": \"debit\",\n      \"amount\": 24.50,\n      \"description\": \"Order payment - LD-2023-099\",\n      \"createdAt\": \"2023-12-31T12:00:00.000Z\"\n    }\n  ]\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
