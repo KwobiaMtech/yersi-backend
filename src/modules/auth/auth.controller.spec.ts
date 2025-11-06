@@ -33,11 +33,9 @@ describe('AuthController', () => {
   describe('register', () => {
     it('should register a new user', async () => {
       const registerDto = {
+        fullName: 'Test User',
         email: 'test@example.com',
         password: 'password123',
-        firstName: 'Test',
-        lastName: 'User',
-        phone: '+1234567890',
       };
 
       const result = {

@@ -9,8 +9,8 @@ export interface AuthResponse {
   user: {
     id: string;
     email: string;
-    firstName: string;
-    lastName: string;
+    fullName: string;
     credits: number;
+    isEmailVerified: boolean;
   };
 }

@@ -22,6 +22,7 @@ import { HttpExceptionFilter } from "./common/filters/http-exception.filter";
 import { ThrottleGuard } from "./common/guards/throttle.guard";
 import { LoggingInterceptor } from "./common/interceptors/logging.interceptor";
 import { RequestContextMiddleware } from "./common/middleware/request-context.middleware";
+import { SharedModule } from "./modules/shared/shared.module";
 
 @Module({
   imports: [
@@ -56,6 +57,7 @@ import { RequestContextMiddleware } from "./common/middleware/request-context.mi
     HealthModule,
     LocationModule,
     AdminModule,
+    SharedModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: HttpExceptionFilter },

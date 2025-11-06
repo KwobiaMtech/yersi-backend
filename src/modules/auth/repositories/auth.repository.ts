@@ -23,4 +23,18 @@ export class AuthRepository {
   async updateRefreshToken(id: string, refreshToken: string): Promise<void> {
     await this.userModel.findByIdAndUpdate(id, { refreshToken }).exec();
   }
+
+  async verifyEmail(email: string): Promise<void> {
+    await this.userModel.findOneAndUpdate(
+      { email },
+      { isEmailVerified: true }
+    ).exec();
+  }
+
+  async updatePassword(email: string, hashedPassword: string): Promise<void> {
+    await this.userModel.findOneAndUpdate(
+      { email },
+      { password: hashedPassword }
+    ).exec();
+  }
 }
