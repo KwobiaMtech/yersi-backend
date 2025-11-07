@@ -8,9 +8,22 @@ class OrderItemDto {
   itemId: string;
 
   @ApiProperty()
+  @IsString()
+  name: string;
+
+  @ApiProperty()
+  @IsString()
+  category: string;
+
+  @ApiProperty()
   @IsNumber()
-  @Min(1)
+  @Min(0)
   quantity: number;
+
+  @ApiProperty()
+  @IsNumber()
+  @Min(0.1)
+  weight: number; // Weight in kg
 
   @ApiProperty({ required: false })
   @IsOptional()
@@ -101,4 +114,36 @@ export class CalculateOrderDto {
   @IsOptional()
   @IsString()
   promoCode?: string;
+}
+
+export class OrderCalculationResponseDto {
+  @ApiProperty()
+  totalWeight: number;
+
+  @ApiProperty()
+  totalItems: number;
+
+  @ApiProperty()
+  subtotal: number;
+
+  @ApiProperty()
+  deliveryFee: number;
+
+  @ApiProperty()
+  promoDiscount: number;
+
+  @ApiProperty()
+  estimatedMinTotal: number;
+
+  @ApiProperty()
+  estimatedMaxTotal: number;
+
+  @ApiProperty()
+  currency: string;
+
+  @ApiProperty()
+  needsAdditionalAmount?: number; // Amount needed to reach minimum order
+
+  @ApiProperty()
+  minimumOrderMet: boolean;
 }

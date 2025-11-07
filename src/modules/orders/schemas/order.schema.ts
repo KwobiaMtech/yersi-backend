@@ -27,14 +27,20 @@ export class Order extends Document {
 
   @Prop([{
     itemId: { type: String, required: true },
+    name: { type: String, required: true },
+    category: { type: String, required: true },
     quantity: { type: Number, required: true },
+    weight: { type: Number, required: true }, // in kg
     unitPrice: { type: Number, required: true },
     total: { type: Number, required: true },
     specialInstructions: String,
   }])
   items: Array<{
     itemId: string;
+    name: string;
+    category: string;
     quantity: number;
+    weight: number;
     unitPrice: number;
     total: number;
     specialInstructions?: string;
@@ -63,6 +69,12 @@ export class Order extends Document {
   subtotal: number;
 
   @Prop({ required: true })
+  totalWeight: number; // Total weight in kg
+
+  @Prop({ required: true })
+  totalItems: number; // Total number of items
+
+  @Prop({ required: true })
   deliveryFee: number;
 
   @Prop({ default: 0 })
@@ -70,6 +82,12 @@ export class Order extends Document {
 
   @Prop({ required: true })
   total: number;
+
+  @Prop({ required: true })
+  estimatedMinTotal: number; // Minimum estimated total
+
+  @Prop({ required: true })
+  estimatedMaxTotal: number; // Maximum estimated total
 
   @Prop({ default: 'GHS' })
   currency: string;

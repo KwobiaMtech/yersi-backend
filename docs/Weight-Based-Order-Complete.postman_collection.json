@@ -1,0 +1,423 @@
+{
+	"info": {
+		"_postman_id": "weight-order-flow-complete-2024",
+		"name": "Weight-Based Order Flow - Complete",
+		"description": "Complete order flow for weight-based laundry service matching the mobile app interface with 4kg items example",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{access_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3000/api/v1"
+		}
+	],
+	"item": [
+		{
+			"name": "1. Authentication",
+			"item": [
+				{
+					"name": "Login User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    pm.environment.set('access_token', response.access_token);",
+									"    pm.environment.set('user_id', response.user.id);",
+									"    console.log('✅ Login successful, token saved');",
+									"} else {",
+									"    console.log('❌ Login failed');",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"user@example.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "login"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "2. Browse Items by Category",
+			"item": [
+				{
+					"name": "Get All Categories",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Categories loaded', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const response = pm.response.json();",
+									"    pm.expect(response.categories).to.include.members(['top', 'bottom', 'occasional_wear', 'underwear', 'nightwear', 'accessories']);",
+									"    console.log('📋 Available categories:', response.categories.join(', '));",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/items/categories",
+							"host": ["{{base_url}}"],
+							"path": ["items", "categories"]
+						}
+					}
+				},
+				{
+					"name": "Browse Top Category Items",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Top items loaded', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const response = pm.response.json();",
+									"    pm.expect(response.items).to.be.an('array');",
+									"    console.log('👕 Top category items:');",
+									"    response.items.forEach(item => {",
+									"        console.log(`  - ${item.name}: ${item.standardWeight}kg, GHS${item.price}/kg`);",
+									"    });",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/items/by-category?category=top&service_id=wash-fold",
+							"host": ["{{base_url}}"],
+							"path": ["items", "by-category"],
+							"query": [
+								{
+									"key": "category",
+									"value": "top"
+								},
+								{
+									"key": "service_id",
+									"value": "wash-fold"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Browse Bottom Category Items",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Bottom items loaded', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const response = pm.response.json();",
+									"    console.log('👖 Bottom category items:');",
+									"    response.items.forEach(item => {",
+									"        console.log(`  - ${item.name}: ${item.standardWeight}kg, GHS${item.price}/kg`);",
+									"    });",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/items/by-category?category=bottom",
+							"host": ["{{base_url}}"],
+							"path": ["items", "by-category"],
+							"query": [
+								{
+									"key": "category",
+									"value": "bottom"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "3. Order Calculation Flow",
+			"item": [
+				{
+					"name": "Calculate - Single Item",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Single item calculation', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const response = pm.response.json();",
+									"    console.log('🧮 Single Item Calculation:');",
+									"    console.log(`   Weight: ${response.totalWeight}kg`);",
+									"    console.log(`   Items: ${response.totalItems}`);",
+									"    console.log(`   Range: GHS${response.estimatedMinTotal} - GHS${response.estimatedMaxTotal}`);",
+									"    console.log(`   Minimum met: ${response.minimumOrderMet ? '✅' : '❌'}`);",
+									"    if (!response.minimumOrderMet) {",
+									"        console.log(`   Need GHS${response.needsAdditionalAmount} more`);",
+									"    }",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"serviceId\": \"wash-fold\",\n    \"vendorId\": \"vendor123\",\n    \"items\": [\n        {\n            \"itemId\": \"shirt-short-sleeve\",\n            \"name\": \"Shirt (Short Sleeve)\",\n            \"category\": \"top\",\n            \"quantity\": 1,\n            \"weight\": 1\n        }\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/orders/calculate",
+							"host": ["{{base_url}}"],
+							"path": ["orders", "calculate"]
+						}
+					}
+				},
+				{
+					"name": "Calculate - App Example (4kg, 4 items)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('App example matches interface', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const response = pm.response.json();",
+									"    pm.expect(response.totalWeight).to.equal(4);",
+									"    pm.expect(response.totalItems).to.equal(4);",
+									"    ",
+									"    console.log('📱 APP INTERFACE MATCH:');",
+									"    console.log('   4kg of items selected ✅');",
+									"    console.log('   4 items ✅');",
+									"    console.log(`   Total Estimated: GHS${response.estimatedMinTotal} ~GHS${response.estimatedMaxTotal} ✅`);",
+									"    ",
+									"    if (!response.minimumOrderMet) {",
+									"        console.log(`   Add GHS ${response.needsAdditionalAmount} more to reach estimated minimum order ✅`);",
+									"    }",
+									"    ",
+									"    pm.environment.set('app_example_min', response.estimatedMinTotal);",
+									"    pm.environment.set('app_example_max', response.estimatedMaxTotal);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"serviceId\": \"wash-fold\",\n    \"vendorId\": \"vendor123\",\n    \"items\": [\n        {\n            \"itemId\": \"shirt-short-sleeve\",\n            \"name\": \"Shirt (Short Sleeve)\",\n            \"category\": \"top\",\n            \"quantity\": 1,\n            \"weight\": 1\n        },\n        {\n            \"itemId\": \"shirt-long-sleeve\",\n            \"name\": \"Shirt (Long Sleeve)\",\n            \"category\": \"top\",\n            \"quantity\": 3,\n            \"weight\": 1\n        }\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/orders/calculate",
+							"host": ["{{base_url}}"],
+							"path": ["orders", "calculate"]
+						}
+					}
+				},
+				{
+					"name": "Calculate - With Promo Code",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Promo code applied', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const response = pm.response.json();",
+									"    pm.expect(response.promoDiscount).to.be.greaterThan(0);",
+									"    console.log('🎟️ Promo Code Applied:');",
+									"    console.log(`   Discount: GHS${response.promoDiscount}`);",
+									"    console.log(`   New Range: GHS${response.estimatedMinTotal} - GHS${response.estimatedMaxTotal}`);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"serviceId\": \"wash-fold\",\n    \"vendorId\": \"vendor123\",\n    \"items\": [\n        {\n            \"itemId\": \"shirt-short-sleeve\",\n            \"name\": \"Shirt (Short Sleeve)\",\n            \"category\": \"top\",\n            \"quantity\": 2,\n            \"weight\": 1\n        },\n        {\n            \"itemId\": \"jeans\",\n            \"name\": \"Jeans\",\n            \"category\": \"bottom\",\n            \"quantity\": 2,\n            \"weight\": 1\n        }\n    ],\n    \"promoCode\": \"SAVE5\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/orders/calculate",
+							"host": ["{{base_url}}"],
+							"path": ["orders", "calculate"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "4. Order Creation & Management",
+			"item": [
+				{
+					"name": "Create Order - Complete Flow",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Order created successfully', function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.have.property('id');",
+									"    pm.expect(response).to.have.property('orderNumber');",
+									"    pm.expect(response.status).to.equal('pending');",
+									"    ",
+									"    pm.environment.set('created_order_id', response.id);",
+									"    pm.environment.set('created_order_number', response.orderNumber);",
+									"    ",
+									"    console.log('✅ Order Created Successfully:');",
+									"    console.log(`   Order Number: ${response.orderNumber}`);",
+									"    console.log(`   Order ID: ${response.id}`);",
+									"    console.log(`   Status: ${response.status}`);",
+									"    console.log(`   Total Weight: ${response.totalWeight}kg`);",
+									"    console.log(`   Total Items: ${response.totalItems}`);",
+									"    console.log(`   Estimated Total: GHS${response.estimatedMinTotal} - GHS${response.estimatedMaxTotal}`);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"serviceId\": \"wash-fold\",\n    \"vendorId\": \"vendor123\",\n    \"items\": [\n        {\n            \"itemId\": \"shirt-short-sleeve\",\n            \"name\": \"Shirt (Short Sleeve)\",\n            \"category\": \"top\",\n            \"quantity\": 1,\n            \"weight\": 1,\n            \"specialInstructions\": \"Handle with care\"\n        },\n        {\n            \"itemId\": \"shirt-long-sleeve\",\n            \"name\": \"Shirt (Long Sleeve)\",\n            \"category\": \"top\",\n            \"quantity\": 3,\n            \"weight\": 1\n        }\n    ],\n    \"pickupAddress\": {\n        \"street\": \"123 Main Street, Labone\",\n        \"city\": \"Accra\",\n        \"region\": \"Greater Accra\",\n        \"phone\": \"+233501234567\",\n        \"instructions\": \"Call when you arrive, blue gate\"\n    },\n    \"deliveryAddress\": {\n        \"street\": \"123 Main Street, Labone\",\n        \"city\": \"Accra\",\n        \"region\": \"Greater Accra\",\n        \"phone\": \"+233501234567\"\n    },\n    \"preferredPickupTime\": \"2024-11-08T10:00:00Z\",\n    \"preferredDeliveryTime\": \"2024-11-09T15:00:00Z\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/orders",
+							"host": ["{{base_url}}"],
+							"path": ["orders"]
+						}
+					}
+				},
+				{
+					"name": "Get User Orders",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Orders retrieved', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const orders = pm.response.json();",
+									"    console.log('📋 User Orders:');",
+									"    if (Array.isArray(orders)) {",
+									"        orders.forEach((order, index) => {",
+									"            console.log(`   ${index + 1}. ${order.orderNumber || order.id} - ${order.status}`);",
+									"            if (order.totalWeight) console.log(`      Weight: ${order.totalWeight}kg, Items: ${order.totalItems}`);",
+									"            if (order.estimatedMinTotal) console.log(`      Estimate: GHS${order.estimatedMinTotal} - GHS${order.estimatedMaxTotal}`);",
+									"        });",
+									"    }",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/orders",
+							"host": ["{{base_url}}"],
+							"path": ["orders"]
+						}
+					}
+				},
+				{
+					"name": "Get Order Details",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Order details retrieved', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const order = pm.response.json();",
+									"    console.log('📄 Order Details:');",
+									"    console.log(`   Order: ${order.orderNumber || order.id}`);",
+									"    console.log(`   Status: ${order.status}`);",
+									"    if (order.totalWeight) {",
+									"        console.log(`   Weight: ${order.totalWeight}kg`);",
+									"        console.log(`   Items: ${order.totalItems}`);",
+									"        console.log(`   Estimate: GHS${order.estimatedMinTotal} - GHS${order.estimatedMaxTotal}`);",
+									"    }",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/orders/{{created_order_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["orders", "{{created_order_id}}"]
+						}
+					}
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,268 @@
+{
+	"info": {
+		"_postman_id": "weight-order-flow-2024",
+		"name": "Weight-Based Order Flow",
+		"description": "Complete order flow for weight-based laundry service matching the mobile app interface",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{access_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Auto-login if no token exists",
+					"if (!pm.environment.get('access_token')) {",
+					"    console.log('No access token found, please run login first');",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3000/api/v1",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "1. Authentication",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    pm.environment.set('access_token', response.access_token);",
+									"    pm.environment.set('user_id', response.user.id);",
+									"    console.log('Login successful, token saved');",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"user@example.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "login"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "2. Items Management",
+			"item": [
+				{
+					"name": "Get All Categories",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Categories returned', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response.categories).to.be.an('array');",
+									"    pm.expect(response.categories).to.include('top');",
+									"    pm.expect(response.categories).to.include('bottom');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/items/categories",
+							"host": ["{{base_url}}"],
+							"path": ["items", "categories"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Items by Category - Top",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Top items returned', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response.items).to.be.an('array');",
+									"    if (response.items.length > 0) {",
+									"        pm.environment.set('shirt_short_id', response.items[0].id);",
+									"        pm.environment.set('shirt_short_name', response.items[0].name);",
+									"        pm.environment.set('shirt_short_weight', response.items[0].standardWeight);",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/items/by-category?category=top&service_id=wash-fold",
+							"host": ["{{base_url}}"],
+							"path": ["items", "by-category"],
+							"query": [
+								{
+									"key": "category",
+									"value": "top"
+								},
+								{
+									"key": "service_id",
+									"value": "wash-fold"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Items by Category - Bottom",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Bottom items returned', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response.items).to.be.an('array');",
+									"    if (response.items.length > 0) {",
+									"        pm.environment.set('jeans_id', response.items.find(item => item.name === 'Jeans')?.id || response.items[0].id);",
+									"        pm.environment.set('jeans_name', response.items.find(item => item.name === 'Jeans')?.name || response.items[0].name);",
+									"        pm.environment.set('jeans_weight', response.items.find(item => item.name === 'Jeans')?.standardWeight || response.items[0].standardWeight);",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/items/by-category?category=bottom",
+							"host": ["{{base_url}}"],
+							"path": ["items", "by-category"],
+							"query": [
+								{
+									"key": "category",
+									"value": "bottom"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "3. Order Flow",
+			"item": [
+				{
+					"name": "Calculate Order - Single Item",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Order calculation returned', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.have.property('totalWeight');",
+									"    pm.expect(response).to.have.property('totalItems');",
+									"    pm.expect(response).to.have.property('estimatedMinTotal');",
+									"    pm.expect(response).to.have.property('estimatedMaxTotal');",
+									"    pm.expect(response).to.have.property('minimumOrderMet');",
+									"    ",
+									"    console.log('Total Weight:', response.totalWeight, 'kg');",
+									"    console.log('Total Items:', response.totalItems);",
+									"    console.log('Estimated Range: GHS', response.estimatedMinTotal, '- GHS', response.estimatedMaxTotal);",
+									"    console.log('Minimum Order Met:', response.minimumOrderMet);",
+									"    ",
+									"    if (!response.minimumOrderMet) {",
+									"        console.log('Need to add GHS', response.needsAdditionalAmount, 'more');",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"serviceId\": \"wash-fold\",\n    \"vendorId\": \"vendor123\",\n    \"items\": [\n        {\n            \"itemId\": \"shirt-short-sleeve\",\n            \"name\": \"Shirt (Short Sleeve)\",\n            \"category\": \"top\",\n            \"quantity\": 1,\n            \"weight\": 1\n        }\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/orders/calculate",
+							"host": ["{{base_url}}"],
+							"path": ["orders", "calculate"]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
