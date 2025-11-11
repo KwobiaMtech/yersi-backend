@@ -2,20 +2,12 @@ import { Controller, Get, Param, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { CacheInterceptor, CacheTTL } from '@nestjs/cache-manager';
 import { ServicesService } from '../services/services.service';
-import { ServicePackageRepository } from '../repositories/service-package.repository';
-import { CategoryRepository } from '../repositories/category.repository';
-import { ItemsRepository } from '../../items/repositories/items.repository';
 
 @ApiTags('Services')
 @Controller('services')
 @UseInterceptors(CacheInterceptor)
 export class ServicesController {
-  constructor(
-    private servicesService: ServicesService,
-    private servicePackageRepository: ServicePackageRepository,
-    private categoryRepository: CategoryRepository,
-    private itemsRepository: ItemsRepository
-  ) {}
+  constructor(private servicesService: ServicesService) {}
 
   @Get()
   @ApiOperation({ summary: 'Get all available services' })
@@ -31,7 +23,7 @@ export class ServicesController {
   @ApiResponse({ status: 200, description: 'Service packages' })
   @CacheTTL(600)
   async getServicePackages(@Param('serviceId') serviceId: string) {
-    return this.servicePackageRepository.findByServiceId(serviceId);
+    return this.servicesService.getServicePackages(serviceId);
   }
 
   @Get(':serviceId/categories')
@@ -40,7 +32,7 @@ export class ServicesController {
   @ApiResponse({ status: 200, description: 'Service categories' })
   @CacheTTL(600)
   async getServiceCategories(@Param('serviceId') serviceId: string) {
-    return this.categoryRepository.findByServiceId(serviceId);
+    return this.servicesService.getServiceCategories(serviceId);
   }
 
   @Get('categories/:categoryId/items')
@@ -49,6 +41,6 @@ export class ServicesController {
   @ApiResponse({ status: 200, description: 'Category items' })
   @CacheTTL(600)
   async getCategoryItems(@Param('categoryId') categoryId: string) {
-    return this.itemsRepository.findByCategory(categoryId);
+    return this.servicesService.getCategoryItems(categoryId);
   }
 }
