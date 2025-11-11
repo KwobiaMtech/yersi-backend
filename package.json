@@ -19,6 +19,8 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "test:e2e:complete": "jest --config ./test/jest-complete-e2e.json",
     "test:e2e:modules": "jest --testPathPattern=modules-e2e.spec.ts --config ./test/jest-e2e.json",
+    "test:e2e:admin-services": "jest --testPathPattern=admin-services.e2e-spec.ts --config ./test/jest-e2e.json",
+    "test:e2e:all-routes": "jest --testPathPattern=all-routes.e2e-spec.ts --config ./test/jest-e2e.json",
     "test:all": "ts-node test/run-all-tests.ts",
     "db:seed": "ts-node src/database/seeders/index.ts",
     "docker:up": "docker-compose up -d",

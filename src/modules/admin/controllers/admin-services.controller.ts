@@ -51,4 +51,25 @@ export class AdminServicesController {
   async getCategories() {
     return this.categoryRepository.findAll();
   }
+
+  @Get()
+  @ApiOperation({ summary: 'Get all services' })
+  async getAllServices() {
+    const services = await this.servicesRepository.findAll();
+    return {
+      services: services.map(service => ({
+        id: service.id,
+        name: service.name,
+        description: service.description,
+        basePrice: service.basePrice,
+        currency: service.currency,
+        minimumOrder: service.minimumOrder,
+        turnaroundHours: service.turnaroundHours,
+        features: service.features,
+        icon: service.icon,
+        colorTheme: service.colorTheme,
+        isActive: service.isActive
+      }))
+    };
+  }
 }
