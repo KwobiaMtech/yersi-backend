@@ -36,8 +36,14 @@ describe('OrdersController', () => {
     it('should calculate order total', async () => {
       const calculateDto = {
         serviceId: 'service123',
-        items: [{ itemId: 'item1', quantity: 2 }],
-        vendorId: 'vendor1',
+        items: [{ 
+          itemId: 'item1', 
+          name: 'Test Item',
+          category: 'clothing',
+          categoryId: 'category123',
+          quantity: 2,
+          weight: 1.5
+        }],
         promoCode: 'SAVE10',
       };
       const result = { subtotal: 20, discount: 2, total: 18 };
@@ -53,8 +59,14 @@ describe('OrdersController', () => {
     it('should create new order', async () => {
       const createDto = {
         serviceId: 'service123',
-        items: [{ itemId: 'item1', quantity: 2 }],
-        vendorId: 'vendor1',
+        items: [{ 
+          itemId: 'item1', 
+          name: 'Test Item',
+          category: 'clothing',
+          categoryId: 'category123',
+          quantity: 2,
+          weight: 1.5
+        }],
         pickupAddress: {
           street: '123 Main St',
           city: 'Accra',

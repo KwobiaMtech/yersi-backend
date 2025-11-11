@@ -1,9 +1,9 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 import { v4 as uuidv4 } from 'uuid';
 
 @Schema({ timestamps: true })
-export class Service extends Document {
+export class Category extends Document {
   @Prop({ required: true, unique: true, default: () => uuidv4() })
   id: string;
 
@@ -14,28 +14,16 @@ export class Service extends Document {
   description: string;
 
   @Prop({ required: true })
-  basePrice: number;
-
-  @Prop({ default: 'GHS' })
-  currency: string;
-
-  @Prop({ required: true })
-  minimumOrder: number;
-
-  @Prop({ type: [Number], required: true })
-  turnaroundHours: number[];
-
-  @Prop({ type: [String], default: [] })
-  features: string[];
-
-  @Prop({ required: true })
   icon: string;
 
   @Prop({ required: true })
   colorTheme: string;
 
+  @Prop({ type: Types.ObjectId, ref: 'Service', required: true })
+  serviceId: Types.ObjectId;
+
   @Prop({ default: true })
   isActive: boolean;
 }
 
-export const ServiceSchema = SchemaFactory.createForClass(Service);
+export const CategorySchema = SchemaFactory.createForClass(Category);

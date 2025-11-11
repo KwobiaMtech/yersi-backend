@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
+import { v4 as uuidv4 } from 'uuid';
 
 export enum ClothingCategory {
   NIGHTWEAR = 'nightwear',
@@ -12,7 +13,7 @@ export enum ClothingCategory {
 
 @Schema({ timestamps: true })
 export class Item extends Document {
-  @Prop({ required: true, unique: true })
+  @Prop({ required: true, unique: true, default: () => uuidv4() })
   id: string;
 
   @Prop({ required: true })
@@ -20,6 +21,9 @@ export class Item extends Document {
 
   @Prop({ enum: Object.values(ClothingCategory), required: true })
   category: ClothingCategory;
+
+  @Prop({ type: Types.ObjectId, ref: 'Category', required: true })
+  categoryId: Types.ObjectId;
 
   @Prop({ required: true })
   price: number; // Price per kg

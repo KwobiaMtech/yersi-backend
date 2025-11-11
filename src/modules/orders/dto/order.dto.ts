@@ -16,6 +16,10 @@ class OrderItemDto {
   category: string;
 
   @ApiProperty()
+  @IsString()
+  categoryId: string;
+
+  @ApiProperty()
   @IsNumber()
   @Min(0)
   quantity: number;
@@ -57,6 +61,26 @@ class AddressDto {
   @IsOptional()
   @IsString()
   instructions?: string;
+
+  @ApiProperty({ required: false, description: 'Google Place ID from location autocomplete' })
+  @IsOptional()
+  @IsString()
+  placeId?: string;
+
+  @ApiProperty({ required: false, description: 'Latitude from geocoding' })
+  @IsOptional()
+  @IsNumber()
+  latitude?: number;
+
+  @ApiProperty({ required: false, description: 'Longitude from geocoding' })
+  @IsOptional()
+  @IsNumber()
+  longitude?: number;
+
+  @ApiProperty({ required: false, description: 'Formatted address from Google' })
+  @IsOptional()
+  @IsString()
+  formattedAddress?: string;
 }
 
 export class CreateOrderDto {
@@ -64,9 +88,10 @@ export class CreateOrderDto {
   @IsString()
   serviceId: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsString()
-  vendorId: string;
+  @IsOptional()
+  vendorId?: string;
 
   @ApiProperty({ type: [OrderItemDto] })
   @IsArray()
@@ -100,9 +125,10 @@ export class CalculateOrderDto {
   @IsString()
   serviceId: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsString()
-  vendorId: string;
+  @IsOptional()
+  vendorId?: string;
 
   @ApiProperty({ type: [OrderItemDto] })
   @IsArray()

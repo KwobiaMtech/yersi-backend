@@ -22,13 +22,14 @@ export class Order extends Document {
   @Prop({ required: true })
   serviceId: string;
 
-  @Prop({ type: Types.ObjectId, ref: 'Vendor', required: true })
-  vendorId: Types.ObjectId;
+  @Prop({ type: Types.ObjectId, ref: 'Vendor', required: false })
+  vendorId?: Types.ObjectId;
 
   @Prop([{
     itemId: { type: String, required: true },
     name: { type: String, required: true },
     category: { type: String, required: true },
+    categoryId: { type: String, required: true },
     quantity: { type: Number, required: true },
     weight: { type: Number, required: true }, // in kg
     unitPrice: { type: Number, required: true },
@@ -39,6 +40,7 @@ export class Order extends Document {
     itemId: string;
     name: string;
     category: string;
+    categoryId: string;
     quantity: number;
     weight: number;
     unitPrice: number;
@@ -54,6 +56,10 @@ export class Order extends Document {
     postalCode?: string;
     phone: string;
     instructions?: string;
+    placeId?: string;
+    latitude?: number;
+    longitude?: number;
+    formattedAddress?: string;
   };
 
   @Prop({ type: Object })
@@ -63,6 +69,10 @@ export class Order extends Document {
     region: string;
     postalCode?: string;
     phone: string;
+    placeId?: string;
+    latitude?: number;
+    longitude?: number;
+    formattedAddress?: string;
   };
 
   @Prop({ required: true })
