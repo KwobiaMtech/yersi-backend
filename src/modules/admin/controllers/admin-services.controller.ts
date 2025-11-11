@@ -29,21 +29,13 @@ export class AdminServicesController {
   @Post('packages')
   @ApiOperation({ summary: 'Create a new service package' })
   async createServicePackage(@Body() packageData: CreateServicePackageDto) {
-    const packageWithObjectId = {
-      ...packageData,
-      serviceId: new Types.ObjectId(packageData.serviceId)
-    };
-    return this.servicePackageRepository.create(packageWithObjectId);
+    return this.servicePackageRepository.create(packageData);
   }
 
   @Post('categories')
   @ApiOperation({ summary: 'Create a new category' })
   async createCategory(@Body() categoryData: CreateCategoryDto) {
-    const categoryWithObjectId = {
-      ...categoryData,
-      serviceId: new Types.ObjectId(categoryData.serviceId)
-    };
-    return this.categoryRepository.create(categoryWithObjectId);
+    return this.categoryRepository.create(categoryData);
   }
 
   @Get('categories')

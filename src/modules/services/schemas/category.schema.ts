@@ -19,8 +19,8 @@ export class Category extends Document {
   @Prop({ required: true })
   colorTheme: string;
 
-  @Prop({ type: Types.ObjectId, ref: 'Service', required: true })
-  serviceId: Types.ObjectId;
+  @Prop({ type: String, ref: 'Service', required: true })
+  serviceId: string;
 
   @Prop({ default: true })
   isActive: boolean;

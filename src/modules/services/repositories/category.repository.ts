@@ -12,7 +12,7 @@ export class CategoryRepository {
   }
 
   async findByServiceId(serviceId: string): Promise<Category[]> {
-    return this.categoryModel.find({ serviceId: new Types.ObjectId(serviceId), isActive: true }).exec();
+    return this.categoryModel.find({ serviceId: serviceId, isActive: true }).exec();
   }
 
   async create(categoryData: Partial<Category>): Promise<Category> {

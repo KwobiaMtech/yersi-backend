@@ -12,8 +12,8 @@ export class ServicePackage extends Document {
   @Prop({ type: [String], required: true })
   steps: string[];
 
-  @Prop({ type: Types.ObjectId, ref: 'Service', required: true })
-  serviceId: Types.ObjectId;
+  @Prop({ type: String, ref: 'Service', required: true })
+  serviceId: string;
 
   @Prop({ default: true })
   isActive: boolean;
