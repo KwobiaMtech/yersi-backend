@@ -7,6 +7,7 @@ import { AdminServicesController } from './controllers/admin-services.controller
 import { AdminItemsController } from './controllers/admin-items.controller';
 import { AdminService } from './services/admin.service';
 import { VendorAdminService } from './services/vendor-admin.service';
+import { AdminItemsService } from './services/admin-items.service';
 import { Admin, AdminSchema } from './schemas/admin.schema';
 import { VendorsModule } from '../vendors/vendors.module';
 import { ServicesModule } from '../services/services.module';
@@ -28,7 +29,7 @@ import { ItemsModule } from '../items/items.module';
     ItemsModule,
   ],
   controllers: [AdminController, VendorAdminController, AdminServicesController, AdminItemsController],
-  providers: [AdminService, VendorAdminService],
+  providers: [AdminService, VendorAdminService, AdminItemsService],
   exports: [AdminService],
 })
 export class AdminModule {}

@@ -19,6 +19,21 @@ export class CategoryRepository {
     return this.categoryModel.find({ serviceId: serviceId, isActive: true }).exec();
   }
 
+  async findById(categoryId: string): Promise<Category | null> {
+    const query: any = { isActive: true };
+    
+    if (Types.ObjectId.isValid(categoryId)) {
+      query.$or = [
+        { _id: new Types.ObjectId(categoryId) },
+        { id: categoryId }
+      ];
+    } else {
+      query.id = categoryId;
+    }
+    
+    return this.categoryModel.findOne(query).exec();
+  }
+
   async create(categoryData: Partial<Category>): Promise<Category> {
     const service = await this.serviceModel.findOne({ id: categoryData.serviceId }).exec();
     if (!service) {
