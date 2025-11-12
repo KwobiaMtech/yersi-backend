@@ -8,7 +8,6 @@ import { CategoryRepository } from './repositories/category.repository';
 import { Service, ServiceSchema } from './schemas/service.schema';
 import { ServicePackage, ServicePackageSchema } from './schemas/service-package.schema';
 import { Category, CategorySchema } from './schemas/category.schema';
-import { ItemsModule } from '../items/items.module';
 
 @Module({
   imports: [
@@ -17,10 +16,9 @@ import { ItemsModule } from '../items/items.module';
       { name: ServicePackage.name, schema: ServicePackageSchema },
       { name: Category.name, schema: CategorySchema }
     ]),
-    ItemsModule,
   ],
   controllers: [ServicesController],
   providers: [ServicesService, ServicesRepository, ServicePackageRepository, CategoryRepository],
-  exports: [ServicesService, ServicesRepository, ServicePackageRepository, CategoryRepository],
+  exports: [ServicesService, ServicesRepository, ServicePackageRepository, CategoryRepository, MongooseModule],
 })
 export class ServicesModule {}
