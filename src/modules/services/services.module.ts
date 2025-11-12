@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ServicesController } from './controllers/services.controller';
 import { ServicesService } from './services/services.service';
@@ -8,6 +8,7 @@ import { CategoryRepository } from './repositories/category.repository';
 import { Service, ServiceSchema } from './schemas/service.schema';
 import { ServicePackage, ServicePackageSchema } from './schemas/service-package.schema';
 import { Category, CategorySchema } from './schemas/category.schema';
+import { ItemsModule } from '../items/items.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { Category, CategorySchema } from './schemas/category.schema';
       { name: ServicePackage.name, schema: ServicePackageSchema },
       { name: Category.name, schema: CategorySchema }
     ]),
+    forwardRef(() => ItemsModule),
   ],
   controllers: [ServicesController],
   providers: [ServicesService, ServicesRepository, ServicePackageRepository, CategoryRepository],
