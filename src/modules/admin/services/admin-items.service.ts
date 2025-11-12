@@ -21,11 +21,7 @@ export class AdminItemsService {
         throw new BadRequestException("Category not found");
       }
 
-      const itemWithObjectId = {
-        ...itemData,
-        categoryId: new Types.ObjectId(itemData.categoryId),
-      };
-      return this.itemsRepository.create(itemWithObjectId);
+      return this.itemsRepository.create(itemData);
     } catch (error) {
       console.error("Error creating item:", error);
       throw new BadRequestException(error.message);

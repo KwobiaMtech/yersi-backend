@@ -22,8 +22,8 @@ export class Item extends Document {
   @Prop({ enum: Object.values(ClothingCategory), required: true })
   category: ClothingCategory;
 
-  @Prop({ type: Types.ObjectId, ref: 'Category', required: true })
-  categoryId: Types.ObjectId;
+  @Prop({ type: String, ref: 'Category', required: true })
+  categoryId: string;
 
   @Prop({ required: true })
   price: number; // Price per kg
