@@ -1,4 +1,4 @@
-import { IsString, IsNumber, IsArray, IsBoolean, IsOptional, IsEnum, IsMongoId } from 'class-validator';
+import { IsString, IsNumber, IsArray, IsBoolean, IsOptional, IsEnum, IsUUID } from 'class-validator';
 import { ClothingCategory } from '../schemas/item.schema';
 
 export class CreateItemDto {
@@ -8,7 +8,7 @@ export class CreateItemDto {
   @IsEnum(ClothingCategory)
   category: ClothingCategory;
 
-  @IsMongoId()
+  @IsUUID()
   categoryId: string;
 
   @IsNumber()

@@ -2,10 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Item } from '../schemas/item.schema';
+import { Category } from '../../services/schemas/category.schema';
 
 @Injectable()
 export class ItemsRepository {
-  constructor(@InjectModel(Item.name) private itemModel: Model<Item>) {}
+  constructor(
+    @InjectModel(Item.name) private itemModel: Model<Item>,
+    @InjectModel(Category.name) private categoryModel: Model<Category>
+  ) {}
 
   async findByService(serviceId: string): Promise<Item[]> {
     return this.itemModel
@@ -29,6 +33,16 @@ export class ItemsRepository {
   }
 
   async create(itemData: Partial<Item>): Promise<Item> {
-    return this.itemModel.create(itemData);
+    const category = await this.categoryModel.findOne({ id: itemData.categoryId }).exec();
+    if (!category) {
+      throw new Error('Category not found');
+    }
+    
+    const itemWithObjectId = {
+      ...itemData,
+      categoryId: category._id.toString()
+    };
+    
+    return this.itemModel.create(itemWithObjectId);
   }
 }
