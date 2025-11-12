@@ -1,4 +1,4 @@
-import { IsString, IsBoolean, IsOptional, IsMongoId } from 'class-validator';
+import { IsString, IsBoolean, IsOptional, IsUUID } from 'class-validator';
 
 export class CreateCategoryDto {
   @IsString()
@@ -13,7 +13,7 @@ export class CreateCategoryDto {
   @IsString()
   colorTheme: string;
 
-  @IsMongoId()
+  @IsUUID()
   serviceId: string;
 
   @IsBoolean()
