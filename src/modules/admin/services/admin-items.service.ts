@@ -1,8 +1,8 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
-import { Types } from 'mongoose';
-import { ItemsRepository } from '../../items/repositories/items.repository';
-import { CreateItemDto } from '../../items/dto/create-item.dto';
-import { CategoryRepository } from '../../services/repositories/category.repository';
+import { Injectable, BadRequestException } from "@nestjs/common";
+import { Types } from "mongoose";
+import { ItemsRepository } from "../../items/repositories/items.repository";
+import { CreateItemDto } from "../../items/dto/create-item.dto";
+import { CategoryRepository } from "../../services/repositories/category.repository";
 
 @Injectable()
 export class AdminItemsService {
@@ -12,17 +12,24 @@ export class AdminItemsService {
   ) {}
 
   async createItem(itemData: CreateItemDto) {
-    const category = await this.categoryRepository.findById(itemData.categoryId);
-    
-    if (!category) {
-      throw new BadRequestException('Category not found');
-    }
+    try {
+      const category = await this.categoryRepository.findById(
+        itemData.categoryId
+      );
 
-    const itemWithObjectId = {
-      ...itemData,
-      categoryId: new Types.ObjectId(itemData.categoryId)
-    };
-    return this.itemsRepository.create(itemWithObjectId);
+      if (!category) {
+        throw new BadRequestException("Category not found");
+      }
+
+      const itemWithObjectId = {
+        ...itemData,
+        categoryId: new Types.ObjectId(itemData.categoryId),
+      };
+      return this.itemsRepository.create(itemWithObjectId);
+    } catch (error) {
+      console.error("Error creating item:", error);
+      throw new BadRequestException(error.message);
+    }
   }
 
   async getItemsByCategory(categoryId: string) {
