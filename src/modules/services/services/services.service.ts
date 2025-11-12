@@ -37,6 +37,10 @@ export class ServicesService {
   }
 
   async getServiceCategories(serviceId: string) {
+    const serviceExists = await this.servicesRepository.findById(serviceId);
+    if (!serviceExists) {
+      throw new HttpException("Service not found", 404);
+    }
     return this.categoryRepository.findByServiceId(serviceId);
   }
 
