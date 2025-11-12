@@ -1,4 +1,9 @@
-import { Injectable, Inject, HttpException } from "@nestjs/common";
+import {
+  Injectable,
+  Inject,
+  HttpException,
+  BadRequestException,
+} from "@nestjs/common";
 import { CACHE_MANAGER } from "@nestjs/cache-manager";
 import { Cache } from "cache-manager";
 import { ServicesRepository } from "../repositories/services.repository";
@@ -45,6 +50,15 @@ export class ServicesService {
   }
 
   async getCategoryItems(categoryId: string) {
-    return this.itemsRepository.findByCategory(categoryId);
+    try {
+      const categoryExists = await this.categoryRepository.findById(categoryId);
+      if (!categoryExists) {
+        throw new HttpException("Category not found", 404);
+      }
+      return this.itemsRepository.findByCategory(categoryId);
+    } catch (error) {
+      console.error("Error fetching category items:", error);
+      throw new BadRequestException(error.message);
+    }
   }
 }
