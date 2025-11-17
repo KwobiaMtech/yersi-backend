@@ -1,27 +1,24 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Vendor } from '../schemas/vendor.schema';
 
 @Injectable()
 export class VendorsRepository {
   constructor(@InjectModel(Vendor.name) private vendorModel: Model<Vendor>) {}
 
+  async create(vendorData: Partial<Vendor>): Promise<Vendor> {
+    const vendor = new this.vendorModel(vendorData);
+    return vendor.save();
+  }
+
   async findNearby(
     longitude: number,
     latitude: number,
     serviceId?: string,
     radiusKm: number = 10,
-  ): Promise<Vendor[]> {
-    const matchConditions: any = {
-      isActive: true,
-    };
-
-    if (serviceId) {
-      matchConditions.services = serviceId;
-    }
-
-    return this.vendorModel.aggregate([
+  ): Promise<any[]> {
+    const pipeline: any[] = [
       {
         $geoNear: {
           near: {
@@ -34,28 +31,94 @@ export class VendorsRepository {
         },
       },
       {
-        $match: matchConditions,
+        $match: { isActive: true },
       },
+    ];
+
+    // If serviceId is provided, join with vendor-services collection
+    if (serviceId) {
+      pipeline.push(
+        {
+          $lookup: {
+            from: 'vendorservices',
+            localField: '_id',
+            foreignField: 'vendorId',
+            as: 'services',
+          },
+        },
+        {
+          $match: {
+            'services.serviceId': new Types.ObjectId(serviceId),
+            'services.isAvailable': true,
+          },
+        }
+      );
+    }
+
+    pipeline.push(
       {
         $addFields: {
           distanceKm: { $divide: ['$distanceKm', 1000] },
         },
       },
-      { $sort: { distanceKm: 1, rating: -1 } },
-    ]);
+      { $sort: { distanceKm: 1, rating: -1 } }
+    );
+
+    return this.vendorModel.aggregate(pipeline);
   }
 
-  async findAll(serviceId?: string): Promise<Vendor[]> {
-    const query: any = { isActive: true };
-    
+  async findAll(serviceId?: string): Promise<any[]> {
+    const pipeline: any[] = [
+      { $match: { isActive: true } },
+    ];
+
     if (serviceId) {
-      query.services = serviceId;
+      pipeline.push(
+        {
+          $lookup: {
+            from: 'vendorservices',
+            localField: '_id',
+            foreignField: 'vendorId',
+            as: 'services',
+          },
+        },
+        {
+          $match: {
+            'services.serviceId': new Types.ObjectId(serviceId),
+            'services.isAvailable': true,
+          },
+        }
+      );
     }
 
-    return this.vendorModel.find(query).sort({ rating: -1, name: 1 }).exec();
+    pipeline.push({ $sort: { rating: -1, name: 1 } });
+
+    return this.vendorModel.aggregate(pipeline);
   }
 
   async findById(id: string): Promise<Vendor | null> {
     return this.vendorModel.findById(id).exec();
+  }
+
+  async findWithServices(id: string): Promise<any> {
+    return this.vendorModel.aggregate([
+      { $match: { _id: new Types.ObjectId(id) } },
+      {
+        $lookup: {
+          from: 'vendorservices',
+          localField: '_id',
+          foreignField: 'vendorId',
+          as: 'services',
+        },
+      },
+      {
+        $lookup: {
+          from: 'services',
+          localField: 'services.serviceId',
+          foreignField: '_id',
+          as: 'serviceDetails',
+        },
+      },
+    ]);
   }
 }

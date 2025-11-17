@@ -60,7 +60,8 @@
     "sib-api-v3-sdk": "^8.5.0",
     "socket.io": "^4.7.2",
     "swagger-ui-express": "^5.0.0",
-    "uuid": "^9.0.1"
+    "uuid": "^9.0.1",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.0",

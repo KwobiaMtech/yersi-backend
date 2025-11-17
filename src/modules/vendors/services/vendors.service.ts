@@ -12,6 +12,10 @@ export class VendorsService {
     private locationService: LocationService,
   ) {}
 
+  async create(vendorData: Partial<Vendor>): Promise<Vendor> {
+    return this.vendorsRepository.create(vendorData);
+  }
+
   async searchVendors(searchDto: SearchVendorsDto): Promise<any> {
     let userLat: number;
     let userLng: number;
@@ -55,7 +59,7 @@ export class VendorsService {
           );
 
           return {
-            ...vendor.toObject(),
+            ...vendor,
             distance: distance.distance,
             distanceText: distance.distanceText,
             duration: distance.duration,
@@ -73,6 +77,11 @@ export class VendorsService {
 
   async getVendorById(id: string): Promise<Vendor | null> {
     return this.vendorsRepository.findById(id);
+  }
+
+  async getVendorWithServices(id: string): Promise<any> {
+    const result = await this.vendorsRepository.findWithServices(id);
+    return result[0] || null;
   }
 
   private formatVendorResponse(vendors: any[], searchDto: SearchVendorsDto, userLocation?: { userLat: number; userLng: number }) {

@@ -65,36 +65,63 @@ export class LocationController {
   }
 
   @Get('nearby-vendors')
-  @ApiOperation({ summary: 'Find nearby vendors with distances' })
+  @ApiOperation({ summary: 'Find nearby vendors with real coordinates and distances' })
   async findNearbyVendors(@Query() dto: NearbyVendorsDto) {
-    const vendors = await this.vendorsService.searchVendors({
+    // Use enhanced vendor search with distance calculation
+    const result = await this.vendorsService.searchVendors({
       latitude: dto.latitude,
       longitude: dto.longitude,
-      radius: dto.radius,
+      radius: dto.radius || 10000, // Default 10km radius
       serviceId: dto.serviceId,
+      includeDistance: true,
+      sortBy: 'distance',
     });
 
-    const vendorsWithDistance = await Promise.all(
-      vendors.map(async (vendor) => {
-        const [vendorLng, vendorLat] = vendor.location.coordinates;
-        const distance = await this.locationService.calculateDistance(
-          dto.latitude,
-          dto.longitude,
-          vendorLat,
-          vendorLng,
-        );
+    // Enhance response with additional location data
+    const enhancedVendors = result.vendors.map(vendor => ({
+      id: vendor._id || vendor.id,
+      name: vendor.name,
+      rating: vendor.rating,
+      totalReviews: vendor.totalReviews,
+      address: {
+        street: vendor.address?.street || 'N/A',
+        city: vendor.address?.city || 'Accra',
+        region: vendor.address?.region || 'Greater Accra',
+        full: vendor.address ? 
+          `${vendor.address.street}, ${vendor.address.city}, ${vendor.address.region}` : 
+          'Address not available',
+      },
+      location: {
+        latitude: vendor.location.coordinates[1],
+        longitude: vendor.location.coordinates[0],
+        coordinates: vendor.location.coordinates,
+      },
+      services: vendor.servicesOffered || [],
+      contact: vendor.contact,
+      businessHours: vendor.businessHours,
+      deliveryFee: vendor.deliveryFee,
+      estimatedPickupTime: vendor.estimatedPickupTime,
+      distance: {
+        km: vendor.distance,
+        text: vendor.distanceText,
+        duration: vendor.duration,
+        durationText: vendor.durationText,
+        status: vendor.distanceStatus,
+      },
+      isAvailable: vendor.isAvailable,
+    }));
 
-        return {
-          ...vendor.toObject(),
-          distance: distance.distance,
-          distanceText: distance.distanceText,
-          duration: distance.duration,
-          durationText: distance.durationText,
-          distanceStatus: distance.status,
-        };
-      }),
-    );
-
-    return vendorsWithDistance.sort((a, b) => a.distance - b.distance);
+    return {
+      vendors: enhancedVendors,
+      total: result.total,
+      userLocation: {
+        latitude: dto.latitude,
+        longitude: dto.longitude,
+      },
+      searchRadius: dto.radius || 10000,
+      searchCriteria: result.searchCriteria,
+      message: result.message,
+      suggestions: result.suggestions,
+    };
   }
 }

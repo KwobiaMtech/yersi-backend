@@ -3,6 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { JwtModule } from '@nestjs/jwt';
 import { AdminController } from './controllers/admin.controller';
 import { VendorAdminController } from './controllers/vendor-admin.controller';
+import { AdminVendorController } from './controllers/admin-vendor.controller';
 import { AdminServicesController } from './controllers/admin-services.controller';
 import { AdminItemsController } from './controllers/admin-items.controller';
 import { AdminService } from './services/admin.service';
@@ -14,6 +15,7 @@ import { ServicesModule } from '../services/services.module';
 import { OrdersModule } from '../orders/orders.module';
 import { UsersModule } from '../users/users.module';
 import { ItemsModule } from '../items/items.module';
+import { LocationModule } from '../location/location.module';
 
 @Module({
   imports: [
@@ -27,8 +29,9 @@ import { ItemsModule } from '../items/items.module';
     OrdersModule,
     UsersModule,
     ItemsModule,
+    LocationModule,
   ],
-  controllers: [AdminController, VendorAdminController, AdminServicesController, AdminItemsController],
+  controllers: [AdminController, VendorAdminController, AdminVendorController, AdminServicesController, AdminItemsController],
   providers: [AdminService, VendorAdminService, AdminItemsService],
   exports: [AdminService],
 })

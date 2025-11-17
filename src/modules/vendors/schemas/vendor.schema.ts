@@ -35,17 +35,23 @@ export class Vendor extends Document {
     region: string;
   };
 
-  @Prop({ type: [String], required: true })
-  servicesOffered: string[];
-
   @Prop({ default: true })
   isAvailable: boolean;
+
+  @Prop({ default: true })
+  isActive: boolean;
 
   @Prop({ required: true })
   deliveryFee: number;
 
   @Prop({ default: 30 })
   estimatedPickupTime: number;
+
+  @Prop()
+  contact: string;
+
+  @Prop({ default: '8:00 AM - 8:00 PM' })
+  businessHours: string;
 }
 
 export const VendorSchema = SchemaFactory.createForClass(Vendor);
