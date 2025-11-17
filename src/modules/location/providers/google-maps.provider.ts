@@ -21,19 +21,33 @@ export class GoogleMapsProvider implements LocationProvider {
       params: {
         input: query,
         components: `country:${country}`,
-        types: 'address',
         key: this.apiKey,
       },
     });
 
-    return {
-      predictions: response.data.predictions.map(prediction => ({
-        placeId: prediction.place_id,
-        description: prediction.description,
-        mainText: prediction.structured_formatting.main_text,
-        secondaryText: prediction.structured_formatting.secondary_text,
-      })),
-    };
+    const predictions = await Promise.all(
+      response.data.predictions.map(async (prediction) => {
+        try {
+          const details = await this.getPlaceDetails(prediction.place_id);
+          return {
+            placeId: prediction.place_id,
+            description: prediction.description,
+            mainText: prediction.structured_formatting.main_text,
+            secondaryText: prediction.structured_formatting.secondary_text,
+            coordinates: [details.longitude, details.latitude],
+          };
+        } catch (error) {
+          return {
+            placeId: prediction.place_id,
+            description: prediction.description,
+            mainText: prediction.structured_formatting.main_text,
+            secondaryText: prediction.structured_formatting.secondary_text,
+          };
+        }
+      })
+    );
+
+    return { predictions };
   }
 
   async geocodeAddress(address: string): Promise<LocationResponse> {

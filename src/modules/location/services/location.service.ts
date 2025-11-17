@@ -37,10 +37,47 @@ export class LocationService {
 
   async autocompleteAddress(query: string, country: string = 'GH') {
     try {
-      return await this.provider.autocompleteAddress(query, country);
+      const result = await this.provider.autocompleteAddress(query, country);
+      
+      // If primary provider returns empty results, try fallback providers
+      if (!result.predictions || result.predictions.length === 0) {
+        console.log(`Primary provider (${this.getProviderName()}) returned no results for "${query}". Trying fallback...`);
+        
+        // Try Nominatim as fallback for better POI coverage in Ghana
+        if (this.provider !== this.nominatimProvider) {
+          const fallbackResult = await this.nominatimProvider.autocompleteAddress(query, country);
+          if (fallbackResult.predictions && fallbackResult.predictions.length > 0) {
+            console.log(`Fallback provider found ${fallbackResult.predictions.length} results`);
+            return fallbackResult;
+          }
+        }
+        
+        // Try Google Maps as second fallback if available
+        if (this.provider !== this.googleMapsProvider) {
+          try {
+            const googleResult = await this.googleMapsProvider.autocompleteAddress(query, country);
+            if (googleResult.predictions && googleResult.predictions.length > 0) {
+              console.log(`Google Maps fallback found ${googleResult.predictions.length} results`);
+              return googleResult;
+            }
+          } catch (error) {
+            console.log('Google Maps fallback failed:', error.message);
+          }
+        }
+      }
+      
+      return result;
     } catch (error) {
+      console.error('Location service error:', error.message);
       throw new HttpException('Failed to fetch address suggestions', HttpStatus.BAD_REQUEST);
     }
+  }
+
+  private getProviderName(): string {
+    if (this.provider === this.mapboxProvider) return 'Mapbox';
+    if (this.provider === this.googleMapsProvider) return 'Google Maps';
+    if (this.provider === this.nominatimProvider) return 'Nominatim';
+    return 'Unknown';
   }
 
   async geocodeAddress(address: string) {

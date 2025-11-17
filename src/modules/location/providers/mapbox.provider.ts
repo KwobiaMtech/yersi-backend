@@ -16,24 +16,51 @@ export class MapboxProvider implements LocationProvider {
   }
 
   async autocompleteAddress(query: string, country: string = 'gh') {
-    const response = await axios.get(`${this.baseUrl}/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json`, {
-      params: {
-        access_token: this.accessToken,
-        country: country.toLowerCase(),
-        types: 'address,poi',
-        limit: 5,
-      },
-    });
+    try {
+      // First try with POI and address types
+      const response = await axios.get(`${this.baseUrl}/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json`, {
+        params: {
+          access_token: this.accessToken,
+          country: country.toLowerCase(),
+          types: 'address,poi',
+          limit: 5,
+        },
+      });
 
-    return {
-      predictions: response.data.features.map(feature => ({
-        placeId: feature.id,
-        description: feature.place_name,
-        mainText: feature.text,
-        secondaryText: feature.place_name.replace(feature.text + ', ', ''),
-        coordinates: feature.center,
-      })),
-    };
+      if (response.data.features.length > 0) {
+        return {
+          predictions: response.data.features.map(feature => ({
+            placeId: feature.id,
+            description: feature.place_name,
+            mainText: feature.text,
+            secondaryText: feature.place_name.replace(feature.text + ', ', ''),
+            coordinates: feature.center,
+          })),
+        };
+      }
+
+      // If no results, try broader search without type restrictions
+      const broadResponse = await axios.get(`${this.baseUrl}/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json`, {
+        params: {
+          access_token: this.accessToken,
+          country: country.toLowerCase(),
+          limit: 5,
+        },
+      });
+
+      return {
+        predictions: broadResponse.data.features.map(feature => ({
+          placeId: feature.id,
+          description: feature.place_name,
+          mainText: feature.text,
+          secondaryText: feature.place_name.replace(feature.text + ', ', ''),
+          coordinates: feature.center,
+        })),
+      };
+    } catch (error) {
+      console.error('Mapbox autocomplete error:', error.response?.data || error.message);
+      return { predictions: [] };
+    }
   }
 
   async geocodeAddress(address: string): Promise<LocationResponse> {
