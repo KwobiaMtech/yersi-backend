@@ -61,42 +61,42 @@ export class AdminController {
     return this.adminService.getAllAdmins();
   }
 
-  @Get("vendors")
-  @UseGuards(AdminAuthGuard)
-  @Roles(AdminRole.SUPER_ADMIN)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: "Get all vendors" })
-  async getAllVendors(
-    @Query("page") page: number = 1,
-    @Query("limit") limit: number = 10
-  ) {
-    // Get all vendors with pagination
-    return {
-      vendors: [],
-      pagination: { page, limit, total: 0, pages: 0 },
-    };
-  }
+  // @Get("vendors")
+  // @UseGuards(AdminAuthGuard)
+  // @Roles(AdminRole.SUPER_ADMIN)
+  // @ApiBearerAuth()
+  // @ApiOperation({ summary: "Get all vendors" })
+  // async getAllVendors(
+  //   @Query("page") page: number = 1,
+  //   @Query("limit") limit: number = 10
+  // ) {
+  //   // Get all vendors with pagination
+  //   return {
+  //     vendors: [],
+  //     pagination: { page, limit, total: 0, pages: 0 },
+  //   };
+  // }
 
-  @Get("vendors/:id")
-  @UseGuards(AdminAuthGuard)
-  @Roles(AdminRole.SUPER_ADMIN)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: "Get vendor details" })
-  async getVendor(@Param("id") id: string) {
-    return this.vendorsService.getVendorById(id);
-  }
+  // @Get("vendors/:id")
+  // @UseGuards(AdminAuthGuard)
+  // @Roles(AdminRole.SUPER_ADMIN)
+  // @ApiBearerAuth()
+  // @ApiOperation({ summary: "Get vendor details" })
+  // async getVendor(@Param("id") id: string) {
+  //   return this.vendorsService.getVendorById(id);
+  // }
 
-  @Delete("vendors/:id")
-  @UseGuards(AdminAuthGuard)
-  @Roles(AdminRole.SUPER_ADMIN)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: "Deactivate vendor" })
-  async deactivateVendor(@Param("id") id: string) {
-    return {
-      message: "Vendor deactivated successfully",
-      vendorId: id,
-    };
-  }
+  // @Delete("vendors/:id")
+  // @UseGuards(AdminAuthGuard)
+  // @Roles(AdminRole.SUPER_ADMIN)
+  // @ApiBearerAuth()
+  // @ApiOperation({ summary: "Deactivate vendor" })
+  // async deactivateVendor(@Param("id") id: string) {
+  //   return {
+  //     message: "Vendor deactivated successfully",
+  //     vendorId: id,
+  //   };
+  // }
 
   @Get("users")
   @UseGuards(AdminAuthGuard)
