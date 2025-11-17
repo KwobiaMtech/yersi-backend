@@ -3,10 +3,9 @@ import { LocationController } from './controllers/location.controller';
 import { LocationService } from './services/location.service';
 import { VendorsService } from '../vendors/services/vendors.service';
 
-describe('LocationController', () => {
+describe('LocationController - Mapbox Integration', () => {
   let controller: LocationController;
   let locationService: LocationService;
-  let vendorsService: VendorsService;
 
   const mockLocationService = {
     autocompleteAddress: jest.fn(),
@@ -37,88 +36,120 @@ describe('LocationController', () => {
 
     controller = module.get<LocationController>(LocationController);
     locationService = module.get<LocationService>(LocationService);
-    vendorsService = module.get<VendorsService>(VendorsService);
   });
 
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
-  });
-
-  describe('autocompleteAddress', () => {
-    it('should return address suggestions', async () => {
-      const query = { query: 'oxford street', country: 'GH' };
-      const result = {
+  describe('Mapbox Autocomplete', () => {
+    it('should return Mapbox address suggestions', async () => {
+      const mockResult = {
         predictions: [
           {
-            placeId: 'ChIJ123',
-            description: 'Oxford Street, Accra, Ghana',
+            placeId: 'address.123',
+            description: 'Oxford Street, Osu, Accra, Ghana',
             mainText: 'Oxford Street',
-            secondaryText: 'Accra, Ghana',
+            secondaryText: 'Osu, Accra, Ghana',
+            coordinates: [-0.1870, 5.6037],
           },
         ],
       };
 
-      mockLocationService.autocompleteAddress.mockResolvedValue(result);
+      mockLocationService.autocompleteAddress.mockResolvedValue(mockResult);
 
-      expect(await controller.autocompleteAddress(query)).toBe(result);
-      expect(locationService.autocompleteAddress).toHaveBeenCalledWith(query.query, query.country);
+      const result = await controller.autocompleteAddress({ 
+        query: 'oxford street', 
+        country: 'GH' 
+      });
+
+      expect(result).toEqual(mockResult);
+      expect(locationService.autocompleteAddress).toHaveBeenCalledWith('oxford street', 'GH');
     });
   });
 
-  describe('geocodeAddress', () => {
-    it('should convert address to coordinates', async () => {
-      const dto = { address: 'Oxford Street, Accra' };
-      const result = {
+  describe('Mapbox Geocoding', () => {
+    it('should geocode address using Mapbox', async () => {
+      const mockResult = {
         latitude: 5.6037,
         longitude: -0.1870,
-        formattedAddress: 'Oxford St, Accra, Ghana',
-        placeId: 'ChIJ123',
+        formattedAddress: 'Oxford Street, Osu, Accra, Ghana',
+        placeId: 'address.123',
       };
 
-      mockLocationService.geocodeAddress.mockResolvedValue(result);
+      mockLocationService.geocodeAddress.mockResolvedValue(mockResult);
 
-      expect(await controller.geocodeAddress(dto)).toBe(result);
-      expect(locationService.geocodeAddress).toHaveBeenCalledWith(dto.address);
+      const result = await controller.geocodeAddress({ 
+        address: 'Oxford Street, Accra' 
+      });
+
+      expect(result).toEqual(mockResult);
+      expect(locationService.geocodeAddress).toHaveBeenCalledWith('Oxford Street, Accra');
     });
   });
 
-  describe('calculateDistance', () => {
-    it('should calculate distance between user and vendor', async () => {
-      const dto = {
-        userLatitude: 5.6037,
-        userLongitude: -0.1870,
-        vendorId: 'vendor123',
-      };
-
+  describe('Mapbox Distance Calculation', () => {
+    it('should calculate distance using Mapbox Directions API', async () => {
       const vendor = {
         id: 'vendor123',
         name: 'Clean Express',
         location: { coordinates: [-0.1875, 5.6040] },
-        address: { street: '123 Main St', city: 'Accra' },
+        address: 'Test Address',
       };
 
-      const distance = {
+      const mockDistance = {
         distance: 0.45,
-        distanceText: '450 m',
+        distanceText: '0.5 km',
         duration: 2,
         durationText: '2 mins',
         status: 'calculated',
       };
 
       mockVendorsService.getVendorById.mockResolvedValue(vendor);
-      mockLocationService.calculateDistance.mockResolvedValue(distance);
+      mockLocationService.calculateDistance.mockResolvedValue(mockDistance);
 
-      const result = await controller.calculateDistance(dto);
+      const result = await controller.calculateDistance({
+        userLatitude: 5.6037,
+        userLongitude: -0.1870,
+        vendorId: 'vendor123',
+      });
 
-      expect(result.vendor.id).toBe(vendor.id);
-      expect(result.distance).toBe(distance.distance);
-      expect(vendorsService.getVendorById).toHaveBeenCalledWith(dto.vendorId);
+      expect(result.vendor.id).toBe('vendor123');
+      expect(result.distance).toBe(0.45);
+      expect(result.distanceText).toBe('0.5 km');
       expect(locationService.calculateDistance).toHaveBeenCalledWith(
-        dto.userLatitude,
-        dto.userLongitude,
-        5.6040,
-        -0.1875,
+        5.6037, -0.1870, 5.6040, -0.1875
       );
+    });
+  });
+
+  describe('Mapbox Nearby Vendors', () => {
+    it('should find nearby vendors with Mapbox distances', async () => {
+      const vendors = [
+        {
+          id: 'vendor1',
+          name: 'Vendor 1',
+          location: { coordinates: [-0.1875, 5.6040] },
+          toObject: () => ({ id: 'vendor1', name: 'Vendor 1' }),
+        },
+      ];
+
+      const mockDistance = {
+        distance: 0.5,
+        distanceText: '0.5 km',
+        duration: 3,
+        durationText: '3 mins',
+        status: 'calculated',
+      };
+
+      mockVendorsService.searchVendors.mockResolvedValue(vendors);
+      mockLocationService.calculateDistance.mockResolvedValue(mockDistance);
+
+      const result = await controller.findNearbyVendors({
+        latitude: 5.6037,
+        longitude: -0.1870,
+        radius: 5000,
+      });
+
+      expect(result[0].distance).toBe(0.5);
+      expect(result[0].distanceText).toBe('0.5 km');
+      expect(result[0].duration).toBe(3);
     });
   });
 });
