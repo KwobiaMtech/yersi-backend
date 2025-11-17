@@ -1,0 +1,471 @@
+{
+	"info": {
+		"_postman_id": "admin-vendor-management-2025",
+		"name": "Admin Vendor Management",
+		"description": "Comprehensive API collection for managing vendors and vendor services in Yersi Laundry platform",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Vendor Management",
+			"item": [
+				{
+					"name": "Create Vendor",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Premium Laundry Services\",\n  \"rating\": 4.5,\n  \"totalReviews\": 25,\n  \"address\": {\n    \"street\": \"East Legon\",\n    \"city\": \"Accra\",\n    \"region\": \"Greater Accra\",\n    \"full\": \"East Legon, Accra, Ghana\"\n  },\n  \"contact\": \"+233 24 123 4567\",\n  \"businessHours\": \"7:00 AM - 9:00 PM\",\n  \"deliveryFee\": 15,\n  \"estimatedPickupTime\": 45,\n  \"isAvailable\": true,\n  \"isActive\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/vendors",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"vendors"
+							]
+						},
+						"description": "Create a new vendor with geocoded location"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Premium Laundry Services\",\n  \"rating\": 4.5\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/admin/vendors",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"admin",
+										"vendors"
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "{\n  \"_id\": \"507f1f77bcf86cd799439030\",\n  \"name\": \"Premium Laundry Services\",\n  \"rating\": 4.5,\n  \"totalReviews\": 25,\n  \"location\": {\n    \"type\": \"Point\",\n    \"coordinates\": [-0.1647, 5.6502]\n  },\n  \"address\": {\n    \"street\": \"East Legon\",\n    \"city\": \"Accra\",\n    \"region\": \"Greater Accra\"\n  },\n  \"contact\": \"+233 24 123 4567\",\n  \"businessHours\": \"7:00 AM - 9:00 PM\",\n  \"deliveryFee\": 15,\n  \"estimatedPickupTime\": 45,\n  \"isAvailable\": true,\n  \"isActive\": true,\n  \"createdAt\": \"2025-11-17T21:50:00.000Z\",\n  \"updatedAt\": \"2025-11-17T21:50:00.000Z\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Get All Vendors",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/vendors?page=1&limit=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"vendors"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Get paginated list of all vendors"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Vendor by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/vendors/{{vendorId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"vendors",
+								"{{vendorId}}"
+							]
+						},
+						"description": "Get vendor details with all associated services"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Vendor",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Premium Laundry Services Updated\",\n  \"rating\": 4.7,\n  \"businessHours\": \"6:00 AM - 10:00 PM\",\n  \"deliveryFee\": 12,\n  \"isAvailable\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/vendors/{{vendorId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"vendors",
+								"{{vendorId}}"
+							]
+						},
+						"description": "Update vendor information"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Vendor",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/vendors/{{vendorId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"vendors",
+								"{{vendorId}}"
+							]
+						},
+						"description": "Delete vendor (soft delete recommended)"
+					},
+					"response": []
+				}
+			],
+			"description": "CRUD operations for vendor management"
+		},
+		{
+			"name": "Vendor Services Management",
+			"item": [
+				{
+					"name": "Add Service to Vendor",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"serviceId\": \"507f1f77bcf86cd799439020\",\n  \"price\": 18,\n  \"turnaroundHours\": 24,\n  \"isAvailable\": true,\n  \"minimumOrder\": 3,\n  \"specialFeatures\": [\n    \"Express service\",\n    \"Eco-friendly detergent\",\n    \"Stain removal\"\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/vendors/{{vendorId}}/services",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"vendors",
+								"{{vendorId}}",
+								"services"
+							]
+						},
+						"description": "Add a service to vendor with custom pricing and features"
+					},
+					"response": [
+						{
+							"name": "Service Added Successfully",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"serviceId\": \"507f1f77bcf86cd799439020\",\n  \"price\": 18\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/admin/vendors/{{vendorId}}/services",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"admin",
+										"vendors",
+										"{{vendorId}}",
+										"services"
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "{\n  \"_id\": \"507f1f77bcf86cd799439040\",\n  \"vendorId\": \"507f1f77bcf86cd799439030\",\n  \"serviceId\": \"507f1f77bcf86cd799439020\",\n  \"price\": 18,\n  \"turnaroundHours\": 24,\n  \"isAvailable\": true,\n  \"minimumOrder\": 3,\n  \"specialFeatures\": [\n    \"Express service\",\n    \"Eco-friendly detergent\",\n    \"Stain removal\"\n  ],\n  \"createdAt\": \"2025-11-17T21:50:00.000Z\",\n  \"updatedAt\": \"2025-11-17T21:50:00.000Z\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Vendor Services",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/vendors/{{vendorId}}/services",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"vendors",
+								"{{vendorId}}",
+								"services"
+							]
+						},
+						"description": "Get all services offered by a specific vendor"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Vendor Service",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"price\": 20,\n  \"turnaroundHours\": 18,\n  \"isAvailable\": true,\n  \"minimumOrder\": 2,\n  \"specialFeatures\": [\n    \"Express service\",\n    \"Eco-friendly detergent\",\n    \"Stain removal\",\n    \"Fabric softener\"\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/vendors/{{vendorId}}/services/{{serviceId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"vendors",
+								"{{vendorId}}",
+								"services",
+								"{{serviceId}}"
+							]
+						},
+						"description": "Update vendor service pricing and features"
+					},
+					"response": []
+				},
+				{
+					"name": "Remove Service from Vendor",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/vendors/{{vendorId}}/services/{{serviceId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"vendors",
+								"{{vendorId}}",
+								"services",
+								"{{serviceId}}"
+							]
+						},
+						"description": "Remove a service from vendor"
+					},
+					"response": []
+				}
+			],
+			"description": "Manage services offered by vendors"
+		},
+		{
+			"name": "Sample Data Examples",
+			"item": [
+				{
+					"name": "Create Laundry Vendor - Yes Laundry",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Yes Laundry\",\n  \"rating\": 4.6,\n  \"totalReviews\": 40,\n  \"address\": {\n    \"street\": \"Cantoments\",\n    \"city\": \"Labone\",\n    \"region\": \"Greater Accra\",\n    \"full\": \"Cantoments, Labone, Accra, Ghana\"\n  },\n  \"contact\": \"+233 55 869 6943\",\n  \"businessHours\": \"8:00 AM - 9:00 PM\",\n  \"deliveryFee\": 10,\n  \"estimatedPickupTime\": 45\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/vendors",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"vendors"
+							]
+						},
+						"description": "Create Yes Laundry vendor from Excel data"
+					},
+					"response": []
+				},
+				{
+					"name": "Add Dry Cleaning Service",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"serviceId\": \"507f1f77bcf86cd799439021\",\n  \"price\": 25,\n  \"turnaroundHours\": 48,\n  \"isAvailable\": true,\n  \"minimumOrder\": 3,\n  \"specialFeatures\": [\n    \"Professional dry cleaning\",\n    \"Stain removal\",\n    \"Fabric protection\"\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/vendors/{{vendorId}}/services",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"vendors",
+								"{{vendorId}}",
+								"services"
+							]
+						},
+						"description": "Add dry cleaning service to vendor"
+					},
+					"response": []
+				},
+				{
+					"name": "Add Laundry Service",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"serviceId\": \"507f1f77bcf86cd799439020\",\n  \"price\": 15,\n  \"turnaroundHours\": 24,\n  \"isAvailable\": true,\n  \"minimumOrder\": 5,\n  \"specialFeatures\": [\n    \"Wash and fold\",\n    \"Eco-friendly detergent\",\n    \"Fabric softener\"\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/vendors/{{vendorId}}/services",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"vendors",
+								"{{vendorId}}",
+								"services"
+							]
+						},
+						"description": "Add basic laundry service to vendor"
+					},
+					"response": []
+				},
+				{
+					"name": "Add Ironing Service",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"serviceId\": \"507f1f77bcf86cd799439022\",\n  \"price\": 8,\n  \"turnaroundHours\": 12,\n  \"isAvailable\": true,\n  \"minimumOrder\": 10,\n  \"specialFeatures\": [\n    \"Professional ironing\",\n    \"Steam pressing\",\n    \"Crease removal\"\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/vendors/{{vendorId}}/services",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"vendors",
+								"{{vendorId}}",
+								"services"
+							]
+						},
+						"description": "Add ironing service to vendor"
+					},
+					"response": []
+				}
+			],
+			"description": "Sample requests with real data from Excel file"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "vendorId",
+			"value": "507f1f77bcf86cd799439030",
+			"type": "string"
+		},
+		{
+			"key": "serviceId",
+			"value": "507f1f77bcf86cd799439020",
+			"type": "string"
+		}
+	]
+}
