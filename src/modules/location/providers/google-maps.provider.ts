@@ -34,7 +34,7 @@ export class GoogleMapsProvider implements LocationProvider {
             description: prediction.description,
             mainText: prediction.structured_formatting.main_text,
             secondaryText: prediction.structured_formatting.secondary_text,
-            coordinates: [details.longitude, details.latitude],
+            coordinates: [details.latitude, details.longitude],
           };
         } catch (error) {
           return {
