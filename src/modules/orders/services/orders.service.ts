@@ -1,13 +1,15 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { AppRequestContext } from '../../../common/context/app-request-context';
 import { CalculateOrderDto, OrderCalculationResponseDto, CreateOrderDto } from '../dto/order.dto';
+import { ServicesRepository } from '../../services/repositories/services.repository';
 
 @Injectable()
 export class OrdersService {
   constructor(
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    private servicesRepository: ServicesRepository,
   ) {}
 
   private get context() {
@@ -62,6 +64,12 @@ export class OrdersService {
   }
 
   async createOrder(createOrderDto: CreateOrderDto) {
+    // Validate serviceId exists
+    const service = await this.servicesRepository.findById(createOrderDto.serviceId);
+    if (!service) {
+      throw new NotFoundException(`Service with ID ${createOrderDto.serviceId} not found`);
+    }
+
     // Calculate order totals
     const calculation = await this.calculateOrder({
       serviceId: createOrderDto.serviceId,

@@ -7,6 +7,7 @@ import { Order, OrderSchema } from './schemas/order.schema';
 import { ItemsModule } from '../items/items.module';
 import { VendorsModule } from '../vendors/vendors.module';
 import { PromotionsModule } from '../promotions/promotions.module';
+import { ServicesModule } from '../services/services.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { PromotionsModule } from '../promotions/promotions.module';
     ItemsModule,
     VendorsModule,
     PromotionsModule,
+    ServicesModule,
   ],
   controllers: [OrdersController],
   providers: [OrdersService, OrdersRepository],
