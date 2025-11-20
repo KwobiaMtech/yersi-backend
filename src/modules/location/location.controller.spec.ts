@@ -126,6 +126,11 @@ describe('LocationController - Mapbox Integration', () => {
           id: 'vendor1',
           name: 'Vendor 1',
           location: { coordinates: [-0.1875, 5.6040] },
+          distance: 0.5,
+          distanceText: '0.5 km',
+          duration: 3,
+          durationText: '3 mins',
+          distanceStatus: 'calculated',
           toObject: () => ({ id: 'vendor1', name: 'Vendor 1' }),
         },
       ];
@@ -138,7 +143,7 @@ describe('LocationController - Mapbox Integration', () => {
         status: 'calculated',
       };
 
-      mockVendorsService.searchVendors.mockResolvedValue(vendors);
+      mockVendorsService.searchVendors.mockResolvedValue({ vendors });
       mockLocationService.calculateDistance.mockResolvedValue(mockDistance);
 
       const result = await controller.findNearbyVendors({
@@ -147,9 +152,9 @@ describe('LocationController - Mapbox Integration', () => {
         radius: 5000,
       });
 
-      expect(result[0].distance).toBe(0.5);
-      expect(result[0].distanceText).toBe('0.5 km');
-      expect(result[0].duration).toBe(3);
+      expect(result.vendors[0].distance.km).toBe(0.5);
+      expect(result.vendors[0].distance.text).toBe('0.5 km');
+      expect(result.vendors[0].distance.duration).toBe(3);
     });
   });
 });

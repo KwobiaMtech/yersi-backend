@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { ConfigService } from '@nestjs/config';
 import { AdminVendorController } from './controllers/admin-vendor.controller';
 import { VendorsService } from '../vendors/services/vendors.service';
 import { VendorServiceRepository } from '../vendors/repositories/vendor-service.repository';
@@ -22,6 +23,10 @@ describe('Admin Vendor Management', () => {
     geocodeAddress: jest.fn(),
   };
 
+  const mockConfigService = {
+    get: jest.fn().mockReturnValue('test-api-key'),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AdminVendorController],
@@ -37,6 +42,10 @@ describe('Admin Vendor Management', () => {
         {
           provide: LocationService,
           useValue: mockLocationService,
+        },
+        {
+          provide: ConfigService,
+          useValue: mockConfigService,
         },
       ],
     }).compile();

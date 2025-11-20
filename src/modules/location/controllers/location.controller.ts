@@ -78,7 +78,7 @@ export class LocationController {
     });
 
     // Enhance response with additional location data
-    const enhancedVendors = result.vendors.map(vendor => ({
+    const enhancedVendors = (result.vendors || []).map(vendor => ({
       id: vendor._id || vendor.id,
       name: vendor.name,
       rating: vendor.rating,
