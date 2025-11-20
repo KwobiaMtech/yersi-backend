@@ -2,6 +2,8 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 
 export enum OrderStatus {
+  DRAFT = 'draft',
+  CONFIRMED = 'confirmed',
   PENDING = 'pending',
   PICKED_UP = 'picked_up',
   IN_WASH = 'in_wash',
@@ -102,8 +104,25 @@ export class Order extends Document {
   @Prop({ default: 'GHS' })
   currency: string;
 
-  @Prop({ enum: Object.values(OrderStatus), default: OrderStatus.PENDING })
+  @Prop({ enum: Object.values(OrderStatus), default: OrderStatus.DRAFT })
   status: OrderStatus;
+
+  @Prop()
+  confirmedAt?: Date;
+
+  @Prop({ type: Object })
+  lockedPricing?: {
+    vendorId: string;
+    vendorName: string;
+    servicePrice: number;
+    deliveryFee: number;
+    subtotal: number;
+    total: number;
+    confirmedAt: Date;
+  };
+
+  @Prop()
+  customerNotes?: string;
 
   @Prop()
   preferredPickupTime?: Date;

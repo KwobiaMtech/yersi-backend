@@ -1,0 +1,242 @@
+{
+	"info": {
+		"_postman_id": "payment-methods-2025",
+		"name": "Payment Methods API",
+		"description": "Payment method management for mobile money and card payments",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "💳 Payment Methods",
+			"item": [
+				{
+					"name": "Get User Payment Methods",
+					"request": {
+						"method": "GET",
+						"header": [
+							{"key": "Authorization", "value": "Bearer {{auth_token}}"}
+						],
+						"url": {
+							"raw": "{{base_url}}/payment-methods",
+							"host": ["{{base_url}}"],
+							"path": ["payment-methods"]
+						},
+						"description": "Get all saved payment methods for the user"
+					},
+					"response": [
+						{
+							"name": "User Payment Methods",
+							"status": "OK",
+							"code": 200,
+							"body": "[\n  {\n    \"id\": \"mm_default_1\",\n    \"type\": \"mobile_money\",\n    \"displayName\": \"MTN Mobile Money\",\n    \"maskedDetails\": \"+233**5***06\",\n    \"isDefault\": true,\n    \"isVerified\": true,\n    \"createdAt\": \"2025-11-19T15:23:51.465Z\",\n    \"provider\": \"mtn\"\n  },\n  {\n    \"id\": \"mm_telecel_1\",\n    \"type\": \"mobile_money\",\n    \"displayName\": \"Telecel Cash\",\n    \"maskedDetails\": \"050**567\",\n    \"isDefault\": false,\n    \"isVerified\": true,\n    \"createdAt\": \"2025-11-18T10:15:30.000Z\",\n    \"provider\": \"telecel\",\n    \"nickname\": \"My Telecel Account\"\n  }\n]"
+						}
+					]
+				},
+				{
+					"name": "Add MTN Mobile Money",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{auth_token}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"phoneNumber\": \"+233555000006\",\n  \"accountName\": \"John Doe\",\n  \"provider\": \"mtn\",\n  \"setAsDefault\": true,\n  \"nickname\": \"My MTN Account\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/payment-methods/mobile-money",
+							"host": ["{{base_url}}"],
+							"path": ["payment-methods", "mobile-money"]
+						},
+						"description": "Add new MTN Mobile Money payment method"
+					},
+					"response": [
+						{
+							"name": "MTN Mobile Money Added",
+							"status": "Created",
+							"code": 201,
+							"body": "{\n  \"id\": \"mm_1763652231465\",\n  \"type\": \"mobile_money\",\n  \"displayName\": \"MTN Mobile Money\",\n  \"maskedDetails\": \"+233**006\",\n  \"isDefault\": true,\n  \"isVerified\": false,\n  \"createdAt\": \"2025-11-20T15:23:51.465Z\",\n  \"nickname\": \"My MTN Account\",\n  \"provider\": \"mtn\"\n}"
+						},
+						{
+							"name": "Invalid Phone Number",
+							"status": "Bad Request",
+							"code": 400,
+							"body": "{\n  \"statusCode\": 400,\n  \"message\": \"Invalid Ghana phone number format\",\n  \"error\": \"Bad Request\"\n}"
+						},
+						{
+							"name": "Duplicate Account",
+							"status": "Bad Request",
+							"code": 400,
+							"body": "{\n  \"statusCode\": 400,\n  \"message\": \"This mobile money account is already added\",\n  \"error\": \"Bad Request\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Add Telecel Cash",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{auth_token}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"phoneNumber\": \"0501234567\",\n  \"accountName\": \"Jane Smith\",\n  \"provider\": \"telecel\",\n  \"nickname\": \"Work Phone\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/payment-methods/mobile-money",
+							"host": ["{{base_url}}"],
+							"path": ["payment-methods", "mobile-money"]
+						},
+						"description": "Add new Telecel Cash payment method"
+					},
+					"response": [
+						{
+							"name": "Telecel Cash Added",
+							"status": "Created",
+							"code": 201,
+							"body": "{\n  \"id\": \"mm_1763652231466\",\n  \"type\": \"mobile_money\",\n  \"displayName\": \"Telecel Cash\",\n  \"maskedDetails\": \"050**567\",\n  \"isDefault\": false,\n  \"isVerified\": false,\n  \"createdAt\": \"2025-11-20T15:24:00.000Z\",\n  \"nickname\": \"Work Phone\",\n  \"provider\": \"telecel\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Add AirtelTigo Money",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{auth_token}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"phoneNumber\": \"+233271234567\",\n  \"accountName\": \"Michael Johnson\",\n  \"provider\": \"airteltigo\",\n  \"setAsDefault\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/payment-methods/mobile-money",
+							"host": ["{{base_url}}"],
+							"path": ["payment-methods", "mobile-money"]
+						},
+						"description": "Add new AirtelTigo Money payment method"
+					},
+					"response": [
+						{
+							"name": "AirtelTigo Money Added",
+							"status": "Created",
+							"code": 201,
+							"body": "{\n  \"id\": \"mm_1763652231467\",\n  \"type\": \"mobile_money\",\n  \"displayName\": \"AirtelTigo Money\",\n  \"maskedDetails\": \"+233**567\",\n  \"isDefault\": false,\n  \"isVerified\": false,\n  \"createdAt\": \"2025-11-20T15:25:00.000Z\",\n  \"provider\": \"airteltigo\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Verify Payment Method",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{auth_token}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"otp\": \"123456\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/payment-methods/{{payment_method_id}}/verify",
+							"host": ["{{base_url}}"],
+							"path": ["payment-methods", "{{payment_method_id}}", "verify"]
+						},
+						"description": "Verify payment method with OTP code"
+					},
+					"response": [
+						{
+							"name": "Payment Method Verified",
+							"status": "OK",
+							"code": 200,
+							"body": "{\n  \"id\": \"mm_1763652231465\",\n  \"type\": \"mobile_money\",\n  \"displayName\": \"MTN Mobile Money\",\n  \"maskedDetails\": \"+233**006\",\n  \"isDefault\": true,\n  \"isVerified\": true,\n  \"createdAt\": \"2025-11-20T15:23:51.465Z\",\n  \"provider\": \"mtn\"\n}"
+						},
+						{
+							"name": "Invalid OTP",
+							"status": "Bad Request",
+							"code": 400,
+							"body": "{\n  \"statusCode\": 400,\n  \"message\": \"Invalid OTP code\",\n  \"error\": \"Bad Request\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Update Payment Method",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{auth_token}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nickname\": \"Updated Nickname\",\n  \"setAsDefault\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/payment-methods/{{payment_method_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["payment-methods", "{{payment_method_id}}"]
+						},
+						"description": "Update payment method details"
+					},
+					"response": [
+						{
+							"name": "Payment Method Updated",
+							"status": "OK",
+							"code": 200,
+							"body": "{\n  \"id\": \"mm_1763652231465\",\n  \"type\": \"mobile_money\",\n  \"displayName\": \"MTN Mobile Money\",\n  \"maskedDetails\": \"+233**006\",\n  \"isDefault\": true,\n  \"isVerified\": true,\n  \"nickname\": \"Updated Nickname\",\n  \"provider\": \"mtn\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Delete Payment Method",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{"key": "Authorization", "value": "Bearer {{auth_token}}"}
+						],
+						"url": {
+							"raw": "{{base_url}}/payment-methods/{{payment_method_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["payment-methods", "{{payment_method_id}}"]
+						},
+						"description": "Delete payment method"
+					},
+					"response": [
+						{
+							"name": "Payment Method Deleted",
+							"status": "OK",
+							"code": 200,
+							"body": ""
+						},
+						{
+							"name": "Payment Method Not Found",
+							"status": "Not Found",
+							"code": 404,
+							"body": "{\n  \"statusCode\": 404,\n  \"message\": \"Payment method not found\",\n  \"error\": \"Not Found\"\n}"
+						}
+					]
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "auth_token",
+			"value": "your_jwt_token_here",
+			"type": "string"
+		},
+		{
+			"key": "payment_method_id",
+			"value": "mm_1763652231465",
+			"type": "string"
+		}
+	]
+}

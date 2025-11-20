@@ -1,4 +1,4 @@
-import { IsString, IsArray, IsOptional, IsDateString, ValidateNested, IsNumber, Min } from 'class-validator';
+import { IsNumber, IsString, IsArray, IsOptional, IsDateString, ValidateNested, Min, IsBoolean } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -88,7 +88,7 @@ export class CreateOrderDto {
   @IsString()
   serviceId: string;
 
-  @ApiProperty({ required: false })
+  @ApiProperty({ required: false, description: 'Vendor ID - customer can change vendor' })
   @IsString()
   @IsOptional()
   vendorId?: string;
@@ -125,7 +125,7 @@ export class CalculateOrderDto {
   @IsString()
   serviceId: string;
 
-  @ApiProperty({ required: false })
+  @ApiProperty({ required: false, description: 'Vendor ID for pricing calculation' })
   @IsString()
   @IsOptional()
   vendorId?: string;
@@ -172,4 +172,82 @@ export class OrderCalculationResponseDto {
 
   @ApiProperty()
   minimumOrderMet: boolean;
+
+  @ApiProperty({ required: false })
+  vendorPricing?: {
+    vendor: {
+      id: string;
+      name: string;
+      deliveryFee: number;
+    };
+    itemBreakdown: Array<{
+      itemId: string;
+      name: string;
+      basePrice: number;
+      vendorPrice: number;
+      quantity: number;
+      weight: number;
+      itemTotal: number;
+      savings: number;
+    }>;
+    comparedToBase: number;
+  };
+}
+
+export class UpdateOrderVendorDto {
+  @ApiProperty({ description: 'New vendor ID for the order' })
+  @IsString()
+  vendorId: string;
+}
+
+export class UpdateOrderDto {
+  @ApiProperty({ required: false, description: 'Update vendor ID' })
+  @IsString()
+  @IsOptional()
+  vendorId?: string;
+
+  @ApiProperty({ required: false, description: 'Update service ID' })
+  @IsString()
+  @IsOptional()
+  serviceId?: string;
+
+  @ApiProperty({ type: [OrderItemDto], required: false, description: 'Update order items' })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => OrderItemDto)
+  @IsOptional()
+  items?: OrderItemDto[];
+
+  @ApiProperty({ required: false, description: 'Update pickup address' })
+  @ValidateNested()
+  @Type(() => AddressDto)
+  @IsOptional()
+  pickupAddress?: AddressDto;
+
+  @ApiProperty({ required: false, description: 'Update delivery address' })
+  @ValidateNested()
+  @Type(() => AddressDto)
+  @IsOptional()
+  deliveryAddress?: AddressDto;
+
+  @ApiProperty({ required: false, description: 'Update preferred pickup time' })
+  @IsOptional()
+  @IsDateString()
+  preferredPickupTime?: string;
+
+  @ApiProperty({ required: false, description: 'Update preferred delivery time' })
+  @IsOptional()
+  @IsDateString()
+  preferredDeliveryTime?: string;
+}
+
+export class ConfirmOrderDto {
+  @ApiProperty({ description: 'Confirm final pricing and vendor selection' })
+  @IsBoolean()
+  confirmPricing: boolean;
+
+  @ApiProperty({ required: false, description: 'Customer notes for the order' })
+  @IsString()
+  @IsOptional()
+  customerNotes?: string;
 }
