@@ -1,0 +1,383 @@
+{
+  "info": {
+    "name": "Yersi Order Flow API - Complete",
+    "description": "Complete order flow documentation for Yersi laundry service application.\n\n## Order Flow Steps:\n1. **Vendor Search** - Find vendors by location\n2. **Calculate Pricing** - Compare base vs vendor pricing\n3. **Create Order** - Create draft order with items and addresses\n4. **Update Order** - Modify vendor, items, or addresses (draft only)\n5. **Confirm Order** - Lock pricing and vendor selection\n6. **Payment Methods** - Add and verify payment methods\n7. **Checkout** - Select delivery type and complete payment\n\n## Authentication:\nAll endpoints require JWT Bearer token. Set `jwt_token` variable after login.\n\n## Variables:\n- `base_url`: API base URL (default: http://localhost:3000)\n- `jwt_token`: JWT authentication token\n- `order_id`: Current order ID (auto-set after order creation)\n- `vendor_id`: Selected vendor ID\n- `service_id`: Selected service ID",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{jwt_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "jwt_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "order_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "vendor_id",
+      "value": "507f1f77bcf86cd799439011",
+      "type": "string"
+    },
+    {
+      "key": "service_id",
+      "value": "507f1f77bcf86cd799439020",
+      "type": "string"
+    },
+    {
+      "key": "payment_method_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Vendor Search",
+      "description": "Search for vendors by location with distance calculations",
+      "item": [
+        {
+          "name": "Search Vendors by Coordinates",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/vendors/search?latitude=5.6037&longitude=-0.1870&serviceId={{service_id}}&radius=10&includeDistance=true&sortBy=distance",
+              "host": ["{{base_url}}"],
+              "path": ["vendors", "search"],
+              "query": [
+                {"key": "latitude", "value": "5.6037"},
+                {"key": "longitude", "value": "-0.1870"},
+                {"key": "serviceId", "value": "{{service_id}}"},
+                {"key": "radius", "value": "10"},
+                {"key": "includeDistance", "value": "true"},
+                {"key": "sortBy", "value": "distance"}
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Calculate Pricing",
+      "description": "Calculate order totals with base or vendor-specific pricing",
+      "item": [
+        {
+          "name": "Calculate Base Pricing",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serviceId\": \"{{service_id}}\",\n  \"items\": [\n    {\n      \"itemId\": \"shirt001\",\n      \"name\": \"Cotton Shirt\",\n      \"category\": \"Shirts\",\n      \"categoryId\": \"cat001\",\n      \"quantity\": 2,\n      \"weight\": 0.5\n    },\n    {\n      \"itemId\": \"pants001\",\n      \"name\": \"Jeans\",\n      \"category\": \"Pants\",\n      \"categoryId\": \"cat002\",\n      \"quantity\": 1,\n      \"weight\": 0.8\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/orders/calculate",
+              "host": ["{{base_url}}"],
+              "path": ["orders", "calculate"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Calculate Vendor Pricing",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serviceId\": \"{{service_id}}\",\n  \"vendorId\": \"{{vendor_id}}\",\n  \"items\": [\n    {\n      \"itemId\": \"shirt001\",\n      \"name\": \"Cotton Shirt\",\n      \"category\": \"Shirts\",\n      \"categoryId\": \"cat001\",\n      \"quantity\": 2,\n      \"weight\": 0.5\n    },\n    {\n      \"itemId\": \"pants001\",\n      \"name\": \"Jeans\",\n      \"category\": \"Pants\",\n      \"categoryId\": \"cat002\",\n      \"quantity\": 1,\n      \"weight\": 0.8\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/orders/calculate",
+              "host": ["{{base_url}}"],
+              "path": ["orders", "calculate"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Order Management",
+      "description": "Create, read, update draft orders",
+      "item": [
+        {
+          "name": "Create Draft Order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('order_id', response.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serviceId\": \"{{service_id}}\",\n  \"vendorId\": \"{{vendor_id}}\",\n  \"items\": [\n    {\n      \"itemId\": \"shirt001\",\n      \"name\": \"Cotton Shirt\",\n      \"category\": \"Shirts\",\n      \"categoryId\": \"cat001\",\n      \"quantity\": 2,\n      \"weight\": 0.5,\n      \"specialInstructions\": \"Handle with care\"\n    },\n    {\n      \"itemId\": \"pants001\",\n      \"name\": \"Jeans\",\n      \"category\": \"Pants\",\n      \"categoryId\": \"cat002\",\n      \"quantity\": 1,\n      \"weight\": 0.8\n    }\n  ],\n  \"pickupAddress\": {\n    \"street\": \"123 Main Street\",\n    \"city\": \"Accra\",\n    \"region\": \"Greater Accra\",\n    \"phone\": \"+233555000001\",\n    \"instructions\": \"Gate code: 1234\",\n    \"placeId\": \"ChIJXxxx\",\n    \"latitude\": 5.6037,\n    \"longitude\": -0.1870,\n    \"formattedAddress\": \"123 Main Street, Accra, Ghana\"\n  },\n  \"deliveryAddress\": {\n    \"street\": \"456 Delivery Avenue\",\n    \"city\": \"Accra\",\n    \"region\": \"Greater Accra\",\n    \"phone\": \"+233555000002\",\n    \"placeId\": \"ChIJYyyy\",\n    \"latitude\": 5.6100,\n    \"longitude\": -0.1900,\n    \"formattedAddress\": \"456 Delivery Avenue, Accra, Ghana\"\n  },\n  \"preferredPickupTime\": \"2025-11-26T10:00:00Z\",\n  \"preferredDeliveryTime\": \"2025-11-27T15:00:00Z\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/orders",
+              "host": ["{{base_url}}"],
+              "path": ["orders"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Orders",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/orders",
+              "host": ["{{base_url}}"],
+              "path": ["orders"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Order by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/orders/{{order_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["orders", "{{order_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Order",
+          "request": {
+            "method": "PUT",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vendorId\": \"507f1f77bcf86cd799439012\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/orders/{{order_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["orders", "{{order_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Preview Vendor Pricing",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vendorId\": \"507f1f77bcf86cd799439012\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/orders/{{order_id}}/preview-vendor-pricing",
+              "host": ["{{base_url}}"],
+              "path": ["orders", "{{order_id}}", "preview-vendor-pricing"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4. Order Confirmation",
+      "description": "Get confirmation details and lock pricing",
+      "item": [
+        {
+          "name": "Get Confirmation Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/orders/{{order_id}}/confirmation-details",
+              "host": ["{{base_url}}"],
+              "path": ["orders", "{{order_id}}", "confirmation-details"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Confirm Order",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"confirmPricing\": true,\n  \"customerNotes\": \"Please handle with care. Call before pickup.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/orders/{{order_id}}/confirm",
+              "host": ["{{base_url}}"],
+              "path": ["orders", "{{order_id}}", "confirm"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "5. Payment Methods",
+      "description": "Manage user payment methods",
+      "item": [
+        {
+          "name": "Get Payment Methods",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/payment-methods",
+              "host": ["{{base_url}}"],
+              "path": ["payment-methods"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add Mobile Money",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('payment_method_id', response.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phoneNumber\": \"+233555000006\",\n  \"accountName\": \"John Doe\",\n  \"provider\": \"mtn\",\n  \"setAsDefault\": true,\n  \"nickname\": \"My MTN Account\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/payment-methods/mobile-money",
+              "host": ["{{base_url}}"],
+              "path": ["payment-methods", "mobile-money"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Verify Payment Method",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"otp\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/payment-methods/{{payment_method_id}}/verify",
+              "host": ["{{base_url}}"],
+              "path": ["payment-methods", "{{payment_method_id}}", "verify"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Payment Method",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/payment-methods/{{payment_method_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["payment-methods", "{{payment_method_id}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "6. Checkout",
+      "description": "Complete order with delivery and payment selection",
+      "item": [
+        {
+          "name": "Get Checkout Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/orders/{{order_id}}/checkout",
+              "host": ["{{base_url}}"],
+              "path": ["orders", "{{order_id}}", "checkout"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Checkout - Delivery Service + Mobile Money",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderId\": \"{{order_id}}\",\n  \"checkoutOptions\": {\n    \"deliveryType\": \"delivery_service\",\n    \"paymentMethod\": \"mtn_mobile_money\",\n    \"paymentDetails\": \"+233555000006\"\n  },\n  \"customerNotes\": \"Please call before pickup\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/orders/checkout",
+              "host": ["{{base_url}}"],
+              "path": ["orders", "checkout"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Checkout - Self Service + Cash",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderId\": \"{{order_id}}\",\n  \"checkoutOptions\": {\n    \"deliveryType\": \"self_service\",\n    \"paymentMethod\": \"cash_on_delivery\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/orders/checkout",
+              "host": ["{{base_url}}"],
+              "path": ["orders", "checkout"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,822 @@
+{
+  "info": {
+    "name": "Yersi Order Flow API - Complete",
+    "description": "Complete order flow documentation with sample requests and responses.\n\n## Order Flow Steps:\n1. Vendor Search\n2. Calculate Pricing\n3. Create Order\n4. Update Order\n5. Confirm Order\n6. Payment Methods\n7. Checkout",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.1"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{jwt_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "jwt_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "order_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "vendor_id",
+      "value": "507f1f77bcf86cd799439011",
+      "type": "string"
+    },
+    {
+      "key": "service_id",
+      "value": "507f1f77bcf86cd799439020",
+      "type": "string"
+    },
+    {
+      "key": "payment_method_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Vendor Search",
+      "item": [
+        {
+          "name": "Search Vendors by Coordinates",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/vendors/search?latitude=5.6037&longitude=-0.1870&serviceId={{service_id}}&radius=10&includeDistance=true&sortBy=distance",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "vendors",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "latitude",
+                  "value": "5.6037"
+                },
+                {
+                  "key": "longitude",
+                  "value": "-0.1870"
+                },
+                {
+                  "key": "serviceId",
+                  "value": "{{service_id}}"
+                },
+                {
+                  "key": "radius",
+                  "value": "10"
+                },
+                {
+                  "key": "includeDistance",
+                  "value": "true"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "distance"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Success - Vendors Found",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"vendors\": [\n    {\n      \"_id\": \"507f1f77bcf86cd799439011\",\n      \"name\": \"Quick Wash\",\n      \"address\": {\n        \"street\": \"123 Oxford Street\",\n        \"city\": \"Accra\",\n        \"region\": \"Greater Accra\"\n      },\n      \"phone\": \"+233201234567\",\n      \"rating\": 4.6,\n      \"reviewCount\": 128,\n      \"deliveryFee\": 8,\n      \"estimatedPickupTime\": 30,\n      \"distance\": 2.3,\n      \"distanceText\": \"2.3 km\",\n      \"duration\": 8,\n      \"durationText\": \"8 mins\"\n    },\n    {\n      \"_id\": \"507f1f77bcf86cd799439012\",\n      \"name\": \"Premium Clean\",\n      \"address\": {\n        \"street\": \"456 Ring Road\",\n        \"city\": \"Accra\",\n        \"region\": \"Greater Accra\"\n      },\n      \"phone\": \"+233209876543\",\n      \"rating\": 4.8,\n      \"reviewCount\": 256,\n      \"deliveryFee\": 12,\n      \"estimatedPickupTime\": 45,\n      \"distance\": 3.7,\n      \"distanceText\": \"3.7 km\",\n      \"duration\": 12,\n      \"durationText\": \"12 mins\"\n    }\n  ],\n  \"total\": 2,\n  \"userLocation\": {\n    \"latitude\": 5.6037,\n    \"longitude\": -0.187\n  },\n  \"searchCriteria\": {\n    \"radius\": 10,\n    \"serviceId\": \"507f1f77bcf86cd799439020\",\n    \"sortBy\": \"distance\",\n    \"includeDistance\": true\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Calculate Pricing",
+      "item": [
+        {
+          "name": "Calculate Base Pricing",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serviceId\": \"{{service_id}}\",\n  \"items\": [\n    {\n      \"itemId\": \"shirt001\",\n      \"name\": \"Cotton Shirt\",\n      \"category\": \"Shirts\",\n      \"categoryId\": \"cat001\",\n      \"quantity\": 2,\n      \"weight\": 0.5\n    },\n    {\n      \"itemId\": \"pants001\",\n      \"name\": \"Jeans\",\n      \"category\": \"Pants\",\n      \"categoryId\": \"cat002\",\n      \"quantity\": 1,\n      \"weight\": 0.8\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/orders/calculate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "orders",
+                "calculate"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Success - Base Pricing",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"totalWeight\": 1.8,\n  \"totalItems\": 3,\n  \"subtotal\": 45,\n  \"deliveryFee\": 5,\n  \"promoDiscount\": 0,\n  \"estimatedMinTotal\": 40,\n  \"estimatedMaxTotal\": 60,\n  \"currency\": \"GHS\",\n  \"needsAdditionalAmount\": 50,\n  \"minimumOrderMet\": false\n}"
+            }
+          ]
+        },
+        {
+          "name": "Calculate Vendor Pricing",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serviceId\": \"{{service_id}}\",\n  \"vendorId\": \"{{vendor_id}}\",\n  \"items\": [\n    {\n      \"itemId\": \"shirt001\",\n      \"name\": \"Cotton Shirt\",\n      \"category\": \"Shirts\",\n      \"categoryId\": \"cat001\",\n      \"quantity\": 2,\n      \"weight\": 0.5\n    },\n    {\n      \"itemId\": \"pants001\",\n      \"name\": \"Jeans\",\n      \"category\": \"Pants\",\n      \"categoryId\": \"cat002\",\n      \"quantity\": 1,\n      \"weight\": 0.8\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/orders/calculate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "orders",
+                "calculate"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Success - Vendor Pricing",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"totalWeight\": 1.8,\n  \"totalItems\": 3,\n  \"subtotal\": 36,\n  \"deliveryFee\": 8,\n  \"promoDiscount\": 0,\n  \"estimatedMinTotal\": 35,\n  \"estimatedMaxTotal\": 53,\n  \"currency\": \"GHS\",\n  \"minimumOrderMet\": false,\n  \"vendorPricing\": {\n    \"vendor\": {\n      \"id\": \"507f1f77bcf86cd799439011\",\n      \"name\": \"Quick Wash\",\n      \"deliveryFee\": 8\n    },\n    \"itemBreakdown\": [\n      {\n        \"itemId\": \"shirt001\",\n        \"name\": \"Cotton Shirt\",\n        \"basePrice\": 25,\n        \"vendorPrice\": 20,\n        \"quantity\": 2,\n        \"weight\": 0.5,\n        \"itemTotal\": 20,\n        \"savings\": 5\n      },\n      {\n        \"itemId\": \"pants001\",\n        \"name\": \"Jeans\",\n        \"basePrice\": 25,\n        \"vendorPrice\": 20,\n        \"quantity\": 1,\n        \"weight\": 0.8,\n        \"itemTotal\": 16,\n        \"savings\": 4\n      }\n    ],\n    \"comparedToBase\": 6\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Order Management",
+      "item": [
+        {
+          "name": "Create Draft Order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('order_id', response.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serviceId\": \"{{service_id}}\",\n  \"vendorId\": \"{{vendor_id}}\",\n  \"items\": [\n    {\n      \"itemId\": \"shirt001\",\n      \"name\": \"Cotton Shirt\",\n      \"category\": \"Shirts\",\n      \"categoryId\": \"cat001\",\n      \"quantity\": 2,\n      \"weight\": 0.5,\n      \"specialInstructions\": \"Handle with care\"\n    },\n    {\n      \"itemId\": \"pants001\",\n      \"name\": \"Jeans\",\n      \"category\": \"Pants\",\n      \"categoryId\": \"cat002\",\n      \"quantity\": 1,\n      \"weight\": 0.8\n    }\n  ],\n  \"pickupAddress\": {\n    \"street\": \"123 Main Street\",\n    \"city\": \"Accra\",\n    \"region\": \"Greater Accra\",\n    \"phone\": \"+233555000001\",\n    \"placeId\": \"ChIJXxxx\",\n    \"latitude\": 5.6037,\n    \"longitude\": -0.187\n  },\n  \"deliveryAddress\": {\n    \"street\": \"456 Delivery Avenue\",\n    \"city\": \"Accra\",\n    \"region\": \"Greater Accra\",\n    \"phone\": \"+233555000002\",\n    \"placeId\": \"ChIJYyyy\",\n    \"latitude\": 5.61,\n    \"longitude\": -0.19\n  },\n  \"preferredPickupTime\": \"2025-11-26T10:00:00Z\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/orders",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "orders"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Success - Order Created",
+              "status": "Created",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"ORD-1732528929882\",\n  \"orderNumber\": \"YRS929882\",\n  \"status\": \"draft\",\n  \"userId\": \"user123\",\n  \"serviceId\": \"507f1f77bcf86cd799439020\",\n  \"vendorId\": \"507f1f77bcf86cd799439011\",\n  \"totalWeight\": 1.8,\n  \"totalItems\": 3,\n  \"subtotal\": 36,\n  \"deliveryFee\": 8,\n  \"total\": 53,\n  \"currency\": \"GHS\",\n  \"createdAt\": \"2025-11-25T12:39:28.328Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get User Orders",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/orders",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "orders"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Success - Orders List",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "[\n  {\n    \"id\": \"ORD-1732528929882\",\n    \"orderNumber\": \"YRS929882\",\n    \"status\": \"draft\",\n    \"totalWeight\": 1.8,\n    \"totalItems\": 3,\n    \"estimatedMaxTotal\": 53,\n    \"currency\": \"GHS\"\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Get Order by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/orders/{{order_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "orders",
+                "{{order_id}}"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Success - Order Details",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"ORD-1732528929882\",\n  \"orderNumber\": \"YRS929882\",\n  \"status\": \"draft\",\n  \"serviceId\": \"507f1f77bcf86cd799439020\",\n  \"vendorId\": \"507f1f77bcf86cd799439011\",\n  \"totalWeight\": 1.8,\n  \"totalItems\": 3,\n  \"subtotal\": 36,\n  \"deliveryFee\": 8,\n  \"total\": 53,\n  \"currency\": \"GHS\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Order",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vendorId\": \"507f1f77bcf86cd799439012\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/orders/{{order_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "orders",
+                "{{order_id}}"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Success - Order Updated",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"ORD-1732528929882\",\n  \"orderNumber\": \"YRS929882\",\n  \"status\": \"draft\",\n  \"vendorId\": \"507f1f77bcf86cd799439012\",\n  \"updatedAt\": \"2025-11-25T12:40:00.000Z\"\n}"
+            },
+            {
+              "name": "Error - Cannot Update Confirmed",
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"statusCode\": 400,\n  \"message\": \"Cannot update confirmed order. Contact support for changes.\",\n  \"error\": \"Bad Request\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Preview Vendor Pricing",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vendorId\": \"507f1f77bcf86cd799439012\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/orders/{{order_id}}/preview-vendor-pricing",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "orders",
+                "{{order_id}}",
+                "preview-vendor-pricing"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Success - Preview Pricing",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"totalWeight\": 1.8,\n  \"subtotal\": 54,\n  \"deliveryFee\": 12,\n  \"estimatedMaxTotal\": 79,\n  \"currency\": \"GHS\",\n  \"vendorPricing\": {\n    \"vendor\": {\n      \"id\": \"507f1f77bcf86cd799439012\",\n      \"name\": \"Premium Clean\",\n      \"deliveryFee\": 12\n    },\n    \"comparedToBase\": -16\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4. Order Confirmation",
+      "item": [
+        {
+          "name": "Get Confirmation Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/orders/{{order_id}}/confirmation-details",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "orders",
+                "{{order_id}}",
+                "confirmation-details"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Success - Confirmation Details",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"order\": {\n    \"id\": \"ORD-1732528929882\",\n    \"orderNumber\": \"YRS929882\",\n    \"status\": \"draft\",\n    \"subtotal\": 36,\n    \"deliveryFee\": 8,\n    \"total\": 53,\n    \"currency\": \"GHS\"\n  },\n  \"vendor\": {\n    \"_id\": \"507f1f77bcf86cd799439011\",\n    \"name\": \"Quick Wash\",\n    \"deliveryFee\": 8,\n    \"rating\": 4.6\n  },\n  \"service\": {\n    \"_id\": \"507f1f77bcf86cd799439020\",\n    \"name\": \"Laundry Service\",\n    \"basePrice\": 25\n  },\n  \"pricingBreakdown\": {\n    \"vendor\": {\n      \"id\": \"507f1f77bcf86cd799439011\",\n      \"name\": \"Quick Wash\"\n    },\n    \"comparedToBase\": 6\n  },\n  \"canConfirm\": true,\n  \"isLocked\": false\n}"
+            }
+          ]
+        },
+        {
+          "name": "Confirm Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"confirmPricing\": true,\n  \"customerNotes\": \"Please handle with care\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/orders/{{order_id}}/confirm",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "orders",
+                "{{order_id}}",
+                "confirm"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Success - Order Confirmed",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"ORD-1732528929882\",\n  \"orderNumber\": \"YRS929882\",\n  \"status\": \"confirmed\",\n  \"confirmedAt\": \"2025-11-25T12:40:00.000Z\",\n  \"lockedPricing\": {\n    \"vendorId\": \"507f1f77bcf86cd799439011\",\n    \"vendorName\": \"Quick Wash\",\n    \"servicePrice\": 20,\n    \"deliveryFee\": 8,\n    \"subtotal\": 36,\n    \"total\": 53,\n    \"confirmedAt\": \"2025-11-25T12:40:00.000Z\"\n  },\n  \"message\": \"Order confirmed successfully! Your vendor has been notified.\",\n  \"nextSteps\": [\n    \"Vendor will contact you for pickup scheduling\",\n    \"Track your order status in the app\"\n  ]\n}"
+            },
+            {
+              "name": "Error - No Vendor Selected",
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"statusCode\": 400,\n  \"message\": \"Please select a vendor before confirming order\",\n  \"error\": \"Bad Request\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5. Payment Methods",
+      "item": [
+        {
+          "name": "Get Payment Methods",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/payment-methods",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payment-methods"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Success - Payment Methods List",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "[\n  {\n    \"id\": \"mm_default_1\",\n    \"type\": \"mobile_money\",\n    \"displayName\": \"MTN Mobile Money\",\n    \"maskedDetails\": \"+233**5***06\",\n    \"isDefault\": true,\n    \"isVerified\": true,\n    \"createdAt\": \"2025-11-24T12:39:28.328Z\",\n    \"provider\": \"mtn\"\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Add Mobile Money",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('payment_method_id', response.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phoneNumber\": \"+233555000006\",\n  \"accountName\": \"John Doe\",\n  \"provider\": \"mtn\",\n  \"setAsDefault\": true,\n  \"nickname\": \"My MTN Account\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/payment-methods/mobile-money",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payment-methods",
+                "mobile-money"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Success - Payment Method Added",
+              "status": "Created",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"mm_1732528929882\",\n  \"type\": \"mobile_money\",\n  \"displayName\": \"MTN Mobile Money\",\n  \"maskedDetails\": \"+233**5***06\",\n  \"isDefault\": true,\n  \"isVerified\": false,\n  \"createdAt\": \"2025-11-25T12:39:28.328Z\",\n  \"nickname\": \"My MTN Account\",\n  \"provider\": \"mtn\"\n}"
+            },
+            {
+              "name": "Error - Invalid Phone Number",
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"statusCode\": 400,\n  \"message\": \"Invalid Ghana phone number format\",\n  \"error\": \"Bad Request\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Verify Payment Method",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"otp\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/payment-methods/{{payment_method_id}}/verify",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payment-methods",
+                "{{payment_method_id}}",
+                "verify"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Success - Payment Verified",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"mm_1732528929882\",\n  \"type\": \"mobile_money\",\n  \"displayName\": \"MTN Mobile Money\",\n  \"maskedDetails\": \"+233**5***06\",\n  \"isDefault\": true,\n  \"isVerified\": true,\n  \"provider\": \"mtn\"\n}"
+            },
+            {
+              "name": "Error - Invalid OTP",
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"statusCode\": 400,\n  \"message\": \"Invalid OTP code\",\n  \"error\": \"Bad Request\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete Payment Method",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/payment-methods/{{payment_method_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payment-methods",
+                "{{payment_method_id}}"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Success - Payment Method Deleted",
+              "status": "No Content",
+              "code": 204,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "6. Checkout",
+      "item": [
+        {
+          "name": "Get Checkout Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/orders/{{order_id}}/checkout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "orders",
+                "{{order_id}}",
+                "checkout"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Success - Checkout Options",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"order\": {\n    \"id\": \"ORD-1732528929882\",\n    \"orderNumber\": \"YRS929882\",\n    \"status\": \"confirmed\",\n    \"total\": 53,\n    \"subtotal\": 36,\n    \"deliveryFee\": 8,\n    \"currency\": \"GHS\"\n  },\n  \"vendor\": {\n    \"_id\": \"507f1f77bcf86cd799439011\",\n    \"name\": \"Quick Wash\",\n    \"deliveryFee\": 8\n  },\n  \"deliveryOptions\": [\n    {\n      \"type\": \"self_service\",\n      \"name\": \"Self Service\",\n      \"description\": \"Drop off and pick up yourself\",\n      \"fee\": 0,\n      \"estimatedTime\": \"2-3 hours\"\n    },\n    {\n      \"type\": \"delivery_service\",\n      \"name\": \"Delivery Service\",\n      \"description\": \"Full pickup and delivery\",\n      \"fee\": 8,\n      \"estimatedTime\": \"30-45 minutes\"\n    }\n  ],\n  \"paymentMethods\": [\n    {\n      \"id\": \"mtn_001\",\n      \"type\": \"mtn_mobile_money\",\n      \"displayName\": \"MTN Mobile Money\",\n      \"details\": \"+23355****06\",\n      \"isDefault\": true\n    },\n    {\n      \"id\": \"visa_001\",\n      \"type\": \"visa_card\",\n      \"displayName\": \"Visa Card\",\n      \"details\": \"****0009884\",\n      \"isDefault\": false\n    }\n  ],\n  \"canAddPaymentMethod\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "Checkout - Delivery Service",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderId\": \"{{order_id}}\",\n  \"checkoutOptions\": {\n    \"deliveryType\": \"delivery_service\",\n    \"paymentMethod\": \"mtn_mobile_money\",\n    \"paymentDetails\": \"+233555000006\"\n  },\n  \"customerNotes\": \"Please call before pickup\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/orders/checkout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "orders",
+                "checkout"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Success - Checkout Complete",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"orderId\": \"ORD-1732528929882\",\n  \"orderNumber\": \"YRS929882\",\n  \"status\": \"pending_payment\",\n  \"totalAmount\": 53,\n  \"currency\": \"GHS\",\n  \"paymentMethod\": \"mtn_mobile_money\",\n  \"deliveryType\": \"delivery_service\",\n  \"paymentUrl\": \"https://payment-gateway.com/pay/1732528929882\",\n  \"paymentReference\": \"PAY_1732528929882\",\n  \"message\": \"Order placed successfully with delivery service. Please complete payment to confirm your order.\",\n  \"nextSteps\": [\n    \"Complete payment using the provided link\",\n    \"Track your order in the app\",\n    \"Vendor will contact you for pickup scheduling\"\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Checkout - Self Service",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderId\": \"{{order_id}}\",\n  \"checkoutOptions\": {\n    \"deliveryType\": \"self_service\",\n    \"paymentMethod\": \"cash_on_delivery\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/orders/checkout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "orders",
+                "checkout"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Success - Self Service Checkout",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"orderId\": \"ORD-1732528929882\",\n  \"orderNumber\": \"YRS929882\",\n  \"status\": \"confirmed\",\n  \"totalAmount\": 36,\n  \"currency\": \"GHS\",\n  \"paymentMethod\": \"cash_on_delivery\",\n  \"deliveryType\": \"self_service\",\n  \"paymentReference\": \"COD_1732528929882\",\n  \"message\": \"Order placed successfully for self-service pickup. Payment will be collected on delivery.\",\n  \"nextSteps\": [\n    \"Track your order in the app\",\n    \"Visit the vendor location for drop-off and pickup\"\n  ]\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
