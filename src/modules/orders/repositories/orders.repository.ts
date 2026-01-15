@@ -40,6 +40,13 @@ export class OrdersRepository {
       .exec();
   }
 
+  async update(id: string, updateData: Partial<Order>): Promise<Order | null> {
+    return this.orderModel
+      .findByIdAndUpdate(id, updateData, { new: true })
+      .populate('vendorId')
+      .exec();
+  }
+
   private getProgressPercentage(status: OrderStatus): number {
     const statusMap = {
       [OrderStatus.PENDING]: 0,

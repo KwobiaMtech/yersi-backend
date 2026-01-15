@@ -125,6 +125,15 @@ export class Order extends Document {
   customerNotes?: string;
 
   @Prop()
+  deliveryType?: string;
+
+  @Prop()
+  paymentMethod?: string;
+
+  @Prop()
+  paymentReference?: string;
+
+  @Prop()
   preferredPickupTime?: Date;
 
   @Prop()

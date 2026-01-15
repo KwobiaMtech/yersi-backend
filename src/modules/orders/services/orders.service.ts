@@ -7,6 +7,10 @@ import { CheckoutOptionsDto, CheckoutSummaryDto, DeliveryType, PaymentMethod } f
 import { ServicesRepository } from '../../services/repositories/services.repository';
 import { VendorsRepository } from '../../vendors/repositories/vendors.repository';
 import { VendorServiceRepository } from '../../vendors/repositories/vendor-service.repository';
+import { OrdersRepository } from '../repositories/orders.repository';
+import { OrderMappingService } from './order-mapping.service';
+import { PaymentMethodsService } from './payment-methods.service';
+import { OrderStatus } from '../schemas/order.schema';
 
 @Injectable()
 export class OrdersService {
@@ -15,6 +19,9 @@ export class OrdersService {
     private servicesRepository: ServicesRepository,
     private vendorsRepository: VendorsRepository,
     private vendorServiceRepository: VendorServiceRepository,
+    private ordersRepository: OrdersRepository,
+    private orderMapper: OrderMappingService,
+    private paymentMethodsService: PaymentMethodsService,
   ) {}
 
   private get context() {
@@ -33,8 +40,13 @@ export class OrdersService {
       throw new NotFoundException(`Service with ID ${calculateDto.serviceId} not found`);
     }
 
-    let deliveryFee = 5; // Default delivery fee
-    let servicePrice = service.basePrice; // Default service price
+    const DEFAULT_DELIVERY_FEE = 5;
+    const PROMO_DISCOUNT_AMOUNT = 5;
+    const WEIGHT_VARIATION_PERCENTAGE = 0.2; // ±20%
+    const MINIMUM_ORDER_AMOUNT = 100;
+
+    let deliveryFee = DEFAULT_DELIVERY_FEE;
+    let servicePrice = service.basePrice;
     let vendor = null;
     let vendorService = null;
 
@@ -89,27 +101,26 @@ export class OrdersService {
       }
     });
 
-    const promoDiscount = calculateDto.promoCode ? 5 : 0;
+    const promoDiscount = calculateDto.promoCode ? PROMO_DISCOUNT_AMOUNT : 0;
     
-    // Estimated range (±20% variation)
-    const estimatedMinTotal = Math.round((subtotal + deliveryFee - promoDiscount) * 0.8);
-    const estimatedMaxTotal = Math.round((subtotal + deliveryFee - promoDiscount) * 1.2);
+    // Estimated range (±20% variation) - based on subtotal only
+    const estimatedMinTotal = Math.round((subtotal * (1 - WEIGHT_VARIATION_PERCENTAGE)) + deliveryFee - promoDiscount);
+    const estimatedMaxTotal = Math.round((subtotal * (1 + WEIGHT_VARIATION_PERCENTAGE)) + deliveryFee - promoDiscount);
     
-    const minimumOrderAmount = 100;
     const currentTotal = subtotal + deliveryFee - promoDiscount;
-    const minimumOrderMet = currentTotal >= minimumOrderAmount;
-    const needsAdditionalAmount = minimumOrderMet ? 0 : minimumOrderAmount - currentTotal;
+    const minimumOrderMet = currentTotal >= MINIMUM_ORDER_AMOUNT;
+    const needsAdditionalAmount = minimumOrderMet ? 0 : MINIMUM_ORDER_AMOUNT - currentTotal;
 
     const calculation: OrderCalculationResponseDto = {
       totalWeight,
       totalItems,
-      subtotal,
+      subtotal: Math.round(subtotal * 100) / 100,
       deliveryFee,
       promoDiscount,
       estimatedMinTotal,
       estimatedMaxTotal,
       currency: 'GHS',
-      needsAdditionalAmount,
+      needsAdditionalAmount: Math.max(0, needsAdditionalAmount),
       minimumOrderMet,
     };
 
@@ -122,7 +133,7 @@ export class OrdersService {
           deliveryFee: vendor.deliveryFee,
         },
         itemBreakdown,
-        comparedToBase: (baseSubtotal + 5) - (subtotal + deliveryFee), // Compare with base delivery fee
+        comparedToBase: Math.round(((baseSubtotal + DEFAULT_DELIVERY_FEE) - (subtotal + deliveryFee)) * 100) / 100,
       };
     }
     
@@ -144,7 +155,6 @@ export class OrdersService {
         throw new NotFoundException(`Vendor with ID ${createOrderDto.vendorId} not found`);
       }
 
-      // Check if vendor offers this service
       const vendorServices = await this.vendorServiceRepository.findByVendorId(createOrderDto.vendorId);
       const vendorService = vendorServices.find(vs => vs.serviceId.toString() === createOrderDto.serviceId);
       
@@ -160,20 +170,12 @@ export class OrdersService {
       items: createOrderDto.items,
     });
 
-    // Create order with vendor assignment
-    const order = {
-      id: `ORD-${Date.now()}`,
-      orderNumber: `YRS${Date.now().toString().slice(-6)}`,
-      status: 'draft', // Start as draft until confirmed
-      userId: this.context.userId,
-      ...createOrderDto,
-      ...calculation,
-      total: calculation.estimatedMaxTotal,
-      createdAt: new Date(),
-    };
+    // Create order in database
+    const orderData = this.orderMapper.toCreateData(createOrderDto, calculation, this.context.userId, service);
+    const order = await this.ordersRepository.create(orderData);
     
     await this.cacheManager.del(`user-orders-${this.context.userId}`);
-    return order;
+    return this.orderMapper.toResponse(order);
   }
 
   async getUserOrders() {
@@ -182,53 +184,23 @@ export class OrdersService {
     const cached = await this.cacheManager.get(cacheKey);
     if (cached) return cached;
 
-    // Mock orders with weight-based data
-    const orders = [
-      {
-        id: '123',
-        orderNumber: 'YRS123456',
-        status: 'pending',
-        totalWeight: 4,
-        totalItems: 4,
-        estimatedMinTotal: 95,
-        estimatedMaxTotal: 120,
-        currency: 'GHS',
-      }
-    ];
+    const orders = await this.ordersRepository.findByUserId(this.context.userId);
+    const mapped = this.orderMapper.toResponseList(orders);
     
-    await this.cacheManager.set(cacheKey, orders, 120);
-    return orders;
+    await this.cacheManager.set(cacheKey, mapped, 120);
+    return mapped;
   }
 
   async getOrderById(orderId: string) {
-    return {
-      id: orderId,
-      orderNumber: `YRS${orderId}`,
-      status: 'draft', // Default to draft status
-      serviceId: '507f1f77bcf86cd799439020', // Mock service ID
-      vendorId: null,
-      items: [
-        {
-          itemId: 'shirt001',
-          name: 'Cotton Shirt',
-          category: 'Shirts',
-          categoryId: 'cat001',
-          quantity: 2,
-          weight: 0.5,
-          unitPrice: 25,
-          total: 25,
-        }
-      ],
-      totalWeight: 4,
-      totalItems: 4,
-      estimatedMinTotal: 95,
-      estimatedMaxTotal: 120,
-      currency: 'GHS',
-    };
+    const order = await this.ordersRepository.findById(orderId);
+    if (!order) {
+      throw new NotFoundException(`Order with ID ${orderId} not found`);
+    }
+    return this.orderMapper.toResponse(order);
   }
 
   async getOrderWithDetails(orderId: string) {
-    const order = await this.getOrderById(orderId);
+    const order = await this.ordersRepository.findById(orderId);
     if (!order) {
       throw new NotFoundException(`Order with ID ${orderId} not found`);
     }
@@ -236,7 +208,7 @@ export class OrdersService {
     // Get vendor details if order has vendor
     let vendorDetails = null;
     if (order.vendorId) {
-      vendorDetails = await this.vendorsRepository.findById(order.vendorId);
+      vendorDetails = await this.vendorsRepository.findById(order.vendorId.toString());
     }
 
     // Get service details
@@ -245,15 +217,11 @@ export class OrdersService {
       serviceDetails = await this.servicesRepository.findById(order.serviceId);
     }
 
-    return {
-      ...order,
-      vendor: vendorDetails,
-      service: serviceDetails,
-    };
+    return this.orderMapper.toDetailedResponse(order, vendorDetails, serviceDetails);
   }
 
   async getOrderConfirmationDetails(orderId: string) {
-    const order = await this.getOrderById(orderId);
+    const order = await this.ordersRepository.findById(orderId);
     if (!order) {
       throw new NotFoundException(`Order with ID ${orderId} not found`);
     }
@@ -263,7 +231,7 @@ export class OrdersService {
     if (order.vendorId) {
       currentPricing = await this.calculateOrder({
         serviceId: order.serviceId,
-        vendorId: order.vendorId,
+        vendorId: order.vendorId.toString(),
         items: order.items,
       });
     } else {
@@ -277,24 +245,13 @@ export class OrdersService {
     // Get vendor details
     let vendorDetails = null;
     if (order.vendorId) {
-      vendorDetails = await this.vendorsRepository.findById(order.vendorId);
+      vendorDetails = await this.vendorsRepository.findById(order.vendorId.toString());
     }
 
     // Get service details
     const serviceDetails = await this.servicesRepository.findById(order.serviceId);
 
-    return {
-      order: {
-        ...order,
-        ...currentPricing, // Include current pricing
-      },
-      vendor: vendorDetails,
-      service: serviceDetails,
-      pricingBreakdown: currentPricing.vendorPricing || null,
-      canConfirm: order.status === 'draft' && !!order.vendorId,
-      confirmationRequired: order.status === 'draft',
-      isLocked: order.status === 'confirmed',
-    };
+    return this.orderMapper.toConfirmationDetails(order, vendorDetails, serviceDetails, currentPricing);
   }
 
   async updateOrderVendor(orderId: string, vendorId: string) {
@@ -304,10 +261,15 @@ export class OrdersService {
       throw new NotFoundException(`Vendor with ID ${vendorId} not found`);
     }
 
-    // Get existing order (mock implementation)
-    const order = await this.getOrderById(orderId);
+    // Get existing order
+    const order = await this.ordersRepository.findById(orderId);
     if (!order) {
       throw new NotFoundException(`Order with ID ${orderId} not found`);
+    }
+
+    // Prevent updates to confirmed orders
+    if (order.status === OrderStatus.CONFIRMED) {
+      throw new BadRequestException('Cannot update confirmed order');
     }
 
     // Validate vendor offers the service
@@ -318,26 +280,35 @@ export class OrdersService {
       throw new BadRequestException(`Vendor does not offer this service or service is unavailable`);
     }
 
-    // Update order with new vendor
-    const updatedOrder = {
-      ...order,
+    // Recalculate with new vendor
+    const calculation = await this.calculateOrder({
+      serviceId: order.serviceId,
       vendorId,
-      updatedAt: new Date(),
-    };
+      items: order.items,
+    });
 
+    // Update order
+    order.vendorId = vendorId as any;
+    order.deliveryFee = calculation.deliveryFee;
+    order.subtotal = calculation.subtotal;
+    order.estimatedMinTotal = calculation.estimatedMinTotal;
+    order.estimatedMaxTotal = calculation.estimatedMaxTotal;
+    order.total = calculation.estimatedMaxTotal;
+    
+    const updatedOrder = await order.save();
     await this.cacheManager.del(`user-orders-${this.context.userId}`);
-    return updatedOrder;
+    return this.orderMapper.toResponse(updatedOrder);
   }
 
   async updateOrder(orderId: string, updateDto: UpdateOrderDto) {
     // Get existing order
-    const existingOrder = await this.getOrderById(orderId);
-    if (!existingOrder) {
+    const order = await this.ordersRepository.findById(orderId);
+    if (!order) {
       throw new NotFoundException(`Order with ID ${orderId} not found`);
     }
 
     // Prevent updates to confirmed orders
-    if (existingOrder.status === 'confirmed') {
+    if (order.status === OrderStatus.CONFIRMED) {
       throw new BadRequestException('Cannot update confirmed order. Contact support for changes.');
     }
 
@@ -347,6 +318,7 @@ export class OrdersService {
       if (!service) {
         throw new NotFoundException(`Service with ID ${updateDto.serviceId} not found`);
       }
+      order.serviceId = updateDto.serviceId;
     }
 
     // Validate vendor if being updated
@@ -357,90 +329,105 @@ export class OrdersService {
       }
 
       // Check if vendor offers the service
-      const serviceId = updateDto.serviceId || existingOrder.serviceId;
+      const serviceId = updateDto.serviceId || order.serviceId;
       const vendorServices = await this.vendorServiceRepository.findByVendorId(updateDto.vendorId);
       const vendorService = vendorServices.find(vs => vs.serviceId.toString() === serviceId);
       
       if (!vendorService || !vendorService.isAvailable) {
         throw new BadRequestException(`Vendor does not offer this service or service is unavailable`);
       }
+      order.vendorId = updateDto.vendorId as any;
     }
+
+    // Update addresses if provided
+    if (updateDto.pickupAddress) order.pickupAddress = updateDto.pickupAddress;
+    if (updateDto.deliveryAddress) order.deliveryAddress = updateDto.deliveryAddress;
+    if (updateDto.preferredPickupTime) order.preferredPickupTime = new Date(updateDto.preferredPickupTime);
+    if (updateDto.preferredDeliveryTime) order.preferredDeliveryTime = new Date(updateDto.preferredDeliveryTime);
 
     // Recalculate totals if items or vendor changed
-    let calculation = null;
     if (updateDto.items || updateDto.vendorId || updateDto.serviceId) {
-      calculation = await this.calculateOrder({
-        serviceId: updateDto.serviceId || existingOrder.serviceId,
-        vendorId: updateDto.vendorId || existingOrder.vendorId,
-        items: updateDto.items || existingOrder.items,
+      const calculation = await this.calculateOrder({
+        serviceId: order.serviceId,
+        vendorId: order.vendorId?.toString(),
+        items: updateDto.items || order.items,
       });
+
+      if (updateDto.items) {
+        const service = await this.servicesRepository.findById(order.serviceId);
+        order.items = updateDto.items.map(item => ({
+          ...item,
+          unitPrice: calculation.vendorPricing?.itemBreakdown.find(i => i.itemId === item.itemId)?.vendorPrice || service.basePrice,
+          total: calculation.vendorPricing?.itemBreakdown.find(i => i.itemId === item.itemId)?.itemTotal || 0,
+        }));
+      }
+
+      order.totalWeight = calculation.totalWeight;
+      order.totalItems = calculation.totalItems;
+      order.subtotal = calculation.subtotal;
+      order.deliveryFee = calculation.deliveryFee;
+      order.promoDiscount = calculation.promoDiscount;
+      order.estimatedMinTotal = calculation.estimatedMinTotal;
+      order.estimatedMaxTotal = calculation.estimatedMaxTotal;
+      order.total = calculation.estimatedMaxTotal;
     }
 
-    // Update order
-    const updatedOrder = {
-      ...existingOrder,
-      ...updateDto,
-      ...(calculation && calculation),
-      updatedAt: new Date(),
-    };
-
+    const updatedOrder = await order.save();
     await this.cacheManager.del(`user-orders-${this.context.userId}`);
-    return updatedOrder;
+    return this.orderMapper.toResponse(updatedOrder);
   }
 
   async confirmOrder(orderId: string, confirmDto: ConfirmOrderDto) {
     // Get existing order
-    const existingOrder = await this.getOrderById(orderId);
-    if (!existingOrder) {
+    const order = await this.ordersRepository.findById(orderId);
+    if (!order) {
       throw new NotFoundException(`Order with ID ${orderId} not found`);
     }
 
     // Check if already confirmed
-    if (existingOrder.status === 'confirmed') {
+    if (order.status === OrderStatus.CONFIRMED) {
       throw new BadRequestException('Order is already confirmed');
     }
 
     // Validate vendor is selected
-    if (!existingOrder.vendorId) {
+    if (!order.vendorId) {
       throw new BadRequestException('Please select a vendor before confirming order');
     }
 
     // Get final pricing calculation
     const finalPricing = await this.calculateOrder({
-      serviceId: existingOrder.serviceId,
-      vendorId: existingOrder.vendorId,
-      items: existingOrder.items,
+      serviceId: order.serviceId,
+      vendorId: order.vendorId.toString(),
+      items: order.items,
     });
 
     // Get vendor details for locked pricing
-    const vendor = await this.vendorsRepository.findById(existingOrder.vendorId);
-    const vendorServices = await this.vendorServiceRepository.findByVendorId(existingOrder.vendorId);
-    const vendorService = vendorServices.find(vs => vs.serviceId.toString() === existingOrder.serviceId);
+    const vendor = await this.vendorsRepository.findById(order.vendorId.toString());
+    const vendorServices = await this.vendorServiceRepository.findByVendorId(order.vendorId.toString());
+    const vendorService = vendorServices.find(vs => vs.serviceId.toString() === order.serviceId);
 
     // Lock in pricing at confirmation
-    const confirmedOrder = {
-      ...existingOrder,
-      status: 'confirmed',
-      confirmedAt: new Date(),
-      customerNotes: confirmDto.customerNotes,
-      lockedPricing: {
-        vendorId: vendor._id.toString(),
-        vendorName: vendor.name,
-        servicePrice: vendorService.price,
-        deliveryFee: vendor.deliveryFee,
-        subtotal: finalPricing.subtotal,
-        total: finalPricing.estimatedMaxTotal,
-        confirmedAt: new Date(),
-      },
-      // Lock final totals
+    order.status = OrderStatus.CONFIRMED;
+    order.confirmedAt = new Date();
+    order.customerNotes = confirmDto.customerNotes;
+    order.lockedPricing = {
+      vendorId: vendor._id.toString(),
+      vendorName: vendor.name,
+      servicePrice: vendorService.price,
+      deliveryFee: vendor.deliveryFee,
       subtotal: finalPricing.subtotal,
-      deliveryFee: finalPricing.deliveryFee,
       total: finalPricing.estimatedMaxTotal,
+      confirmedAt: new Date(),
     };
+    order.subtotal = finalPricing.subtotal;
+    order.deliveryFee = finalPricing.deliveryFee;
+    order.total = finalPricing.estimatedMaxTotal;
 
+    const confirmedOrder = await order.save();
     await this.cacheManager.del(`user-orders-${this.context.userId}`);
+    
     return {
-      ...confirmedOrder,
+      ...this.orderMapper.toResponse(confirmedOrder),
       message: 'Order confirmed successfully! Your vendor has been notified.',
       nextSteps: [
         'Vendor will contact you for pickup scheduling',
@@ -457,23 +444,8 @@ export class OrdersService {
       throw new BadRequestException('Order cannot be checked out. Please complete order details first.');
     }
 
-    // Get user's saved payment methods (mock data)
-    const savedPaymentMethods = [
-      {
-        id: 'mtn_001',
-        type: PaymentMethod.MTN_MOBILE_MONEY,
-        displayName: 'MTN Mobile Money',
-        details: '+23355****06',
-        isDefault: true,
-      },
-      {
-        id: 'visa_001',
-        type: PaymentMethod.VISA_CARD,
-        displayName: 'Visa Card',
-        details: '000*******0009884',
-        isDefault: false,
-      },
-    ];
+    // Fetch user's saved payment methods from database
+    const savedPaymentMethods = await this.paymentMethodsService.getUserPaymentMethods();
 
     return {
       ...orderDetails,
@@ -488,7 +460,7 @@ export class OrdersService {
         {
           type: DeliveryType.DELIVERY_SERVICE,
           name: 'Delivery Service',
-          description: orderDetails.order.deliveryAddress?.formattedAddress || 'East Legon, Greater Accra, Ghana',
+          description: orderDetails.order.deliveryAddress?.formattedAddress || 'Delivery to your address',
           fee: orderDetails.order.deliveryFee,
           estimatedTime: '30-45 minutes',
         },
@@ -499,26 +471,48 @@ export class OrdersService {
   }
 
   async processCheckout(checkoutDto: CheckoutSummaryDto) {
-    // Get order details
-    const orderDetails = await this.getOrderConfirmationDetails(checkoutDto.orderId);
-    
-    if (!orderDetails.canConfirm) {
+    // Get order
+    const order = await this.ordersRepository.findById(checkoutDto.orderId);
+    if (!order) {
+      throw new NotFoundException(`Order with ID ${checkoutDto.orderId} not found`);
+    }
+
+    // Validate order can be checked out
+    if (order.status !== OrderStatus.DRAFT && order.status !== OrderStatus.CONFIRMED) {
       throw new BadRequestException('Order cannot be checked out');
     }
 
     // Adjust pricing based on delivery type
-    let finalTotal = orderDetails.order.total;
+    let finalTotal = order.total;
     if (checkoutDto.checkoutOptions.deliveryType === DeliveryType.SELF_SERVICE) {
-      finalTotal = orderDetails.order.subtotal || orderDetails.order.total - orderDetails.order.deliveryFee; // Remove delivery fee
+      finalTotal = order.subtotal; // Remove delivery fee
+      order.deliveryFee = 0;
     }
 
-    // First confirm the order
-    await this.confirmOrder(checkoutDto.orderId, {
-      confirmPricing: true,
-      customerNotes: checkoutDto.customerNotes,
-    });
+    // Confirm order if still draft
+    if (order.status === OrderStatus.DRAFT) {
+      if (!order.vendorId) {
+        throw new BadRequestException('Please select a vendor before checkout');
+      }
+      
+      const vendor = await this.vendorsRepository.findById(order.vendorId.toString());
+      const vendorServices = await this.vendorServiceRepository.findByVendorId(order.vendorId.toString());
+      const vendorService = vendorServices.find(vs => vs.serviceId.toString() === order.serviceId);
 
-    // Process payment based on method
+      order.status = OrderStatus.CONFIRMED;
+      order.confirmedAt = new Date();
+      order.lockedPricing = {
+        vendorId: vendor._id.toString(),
+        vendorName: vendor.name,
+        servicePrice: vendorService.price,
+        deliveryFee: order.deliveryFee,
+        subtotal: order.subtotal,
+        total: finalTotal,
+        confirmedAt: new Date(),
+      };
+    }
+
+    // Process payment
     const paymentResult = await this.processPayment(
       checkoutDto.checkoutOptions.paymentMethod,
       finalTotal,
@@ -526,30 +520,26 @@ export class OrdersService {
     );
 
     // Update order with checkout details
-    const checkoutOrder = {
-      ...orderDetails.order,
-      deliveryType: checkoutDto.checkoutOptions.deliveryType,
-      paymentMethod: checkoutDto.checkoutOptions.paymentMethod,
-      paymentReference: paymentResult.reference,
-      finalTotal,
-      status: paymentResult.requiresConfirmation ? 'pending_payment' : 'confirmed',
-    };
+    order.deliveryType = checkoutDto.checkoutOptions.deliveryType;
+    order.paymentMethod = checkoutDto.checkoutOptions.paymentMethod;
+    order.paymentReference = paymentResult.reference;
+    order.customerNotes = checkoutDto.customerNotes;
+    order.total = finalTotal;
+    
+    if (!paymentResult.requiresConfirmation) {
+      order.status = OrderStatus.PENDING;
+    }
 
+    const updatedOrder = await order.save();
     await this.cacheManager.del(`user-orders-${this.context.userId}`);
 
-    return {
-      orderId: checkoutOrder.id,
-      orderNumber: checkoutOrder.orderNumber,
-      status: checkoutOrder.status,
-      totalAmount: finalTotal,
-      currency: 'GHS',
-      paymentMethod: checkoutDto.checkoutOptions.paymentMethod,
-      deliveryType: checkoutDto.checkoutOptions.deliveryType,
-      paymentUrl: paymentResult.paymentUrl,
-      paymentReference: paymentResult.reference,
-      message: this.getCheckoutMessage(checkoutDto.checkoutOptions),
-      nextSteps: this.getCheckoutNextSteps(checkoutDto.checkoutOptions),
-    };
+    return this.orderMapper.toCheckoutResponse(
+      updatedOrder,
+      paymentResult.paymentUrl,
+      paymentResult.reference,
+      this.getCheckoutMessage(checkoutDto.checkoutOptions),
+      this.getCheckoutNextSteps(checkoutDto.checkoutOptions)
+    );
   }
 
   private async processPayment(method: PaymentMethod, amount: number, paymentDetails?: string) {
