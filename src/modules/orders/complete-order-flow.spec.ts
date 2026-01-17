@@ -1,5 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { OrdersService } from './services/orders.service';
+import { OrdersRepository } from './repositories/orders.repository';
+import { OrderMappingService } from './services/order-mapping.service';
 import { PaymentMethodsService } from './services/payment-methods.service';
 import { ServicesRepository } from '../services/repositories/services.repository';
 import { VendorsRepository } from '../vendors/repositories/vendors.repository';
@@ -109,6 +111,65 @@ describe('Complete Order Flow E2E Test', () => {
         {
           provide: VendorServiceRepository,
           useValue: mockVendorServiceRepository,
+        },
+        {
+          provide: OrdersRepository,
+          useValue: {
+            create: jest.fn((data) => Promise.resolve({
+              _id: 'order-123',
+              ...data,
+            })),
+            findById: jest.fn(),
+            update: jest.fn(),
+          },
+        },
+        {
+          provide: OrderMappingService,
+          useValue: {
+            toCreateData: jest.fn((dto, calc, userId, service) => ({
+              orderNumber: 'YRS123456',
+              status: 'draft',
+              userId,
+              serviceId: dto.serviceId,
+              vendorId: dto.vendorId,
+              items: dto.items.map(item => ({
+                ...item,
+                unitPrice: service.basePrice,
+                total: item.weight * service.basePrice * item.quantity,
+              })),
+              pickupAddress: dto.pickupAddress,
+              deliveryAddress: dto.deliveryAddress,
+              totalWeight: calc.totalWeight,
+              totalItems: calc.totalItems,
+              subtotal: calc.subtotal,
+              deliveryFee: calc.deliveryFee,
+              promoDiscount: calc.promoDiscount,
+              estimatedMinTotal: calc.estimatedMinTotal,
+              estimatedMaxTotal: calc.estimatedMaxTotal,
+              total: calc.estimatedMaxTotal,
+              currency: calc.currency,
+            })),
+            toResponse: jest.fn((order) => ({
+              id: order._id,
+              orderNumber: order.orderNumber,
+              status: order.status,
+              userId: order.userId,
+              serviceId: order.serviceId,
+              vendorId: order.vendorId,
+              items: order.items,
+              pickupAddress: order.pickupAddress,
+              deliveryAddress: order.deliveryAddress,
+              subtotal: order.subtotal,
+              totalWeight: order.totalWeight,
+              totalItems: order.totalItems,
+              deliveryFee: order.deliveryFee,
+              promoDiscount: order.promoDiscount,
+              estimatedMinTotal: order.estimatedMinTotal,
+              estimatedMaxTotal: order.estimatedMaxTotal,
+              total: order.total,
+              currency: order.currency,
+            })),
+          },
         },
       ],
     }).compile();

@@ -6,6 +6,7 @@ import {
   Body,
   Param,
   UseGuards,
+  UseInterceptors,
   Request,
 } from "@nestjs/common";
 import {
@@ -15,6 +16,7 @@ import {
   ApiResponse,
 } from "@nestjs/swagger";
 import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
+import { RequestContextInterceptor } from "../../../common/interceptors/request-context.interceptor";
 import { OrdersService } from "../services/orders.service";
 import {
   CreateOrderDto,
@@ -29,6 +31,7 @@ import { CheckoutSummaryDto } from "../dto/checkout.dto";
 @ApiTags("Orders")
 @Controller("orders")
 @UseGuards(JwtAuthGuard)
+@UseInterceptors(RequestContextInterceptor)
 @ApiBearerAuth()
 export class OrdersController {
   constructor(private ordersService: OrdersService) {}
