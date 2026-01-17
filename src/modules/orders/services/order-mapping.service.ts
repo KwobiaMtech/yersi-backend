@@ -11,11 +11,15 @@ export class OrderMappingService {
       userId: userId as any,
       serviceId: createOrderDto.serviceId,
       vendorId: createOrderDto.vendorId as any,
-      items: createOrderDto.items.map(item => ({
-        ...item,
-        unitPrice: calculation.vendorPricing?.itemBreakdown.find(i => i.itemId === item.itemId)?.vendorPrice || service.basePrice,
-        total: calculation.vendorPricing?.itemBreakdown.find(i => i.itemId === item.itemId)?.itemTotal || 0,
-      })),
+      items: createOrderDto.items.map(item => {
+        const unitPrice = calculation.vendorPricing?.itemBreakdown.find(i => i.itemId === item.itemId)?.vendorPrice || service.basePrice;
+        const total = calculation.vendorPricing?.itemBreakdown.find(i => i.itemId === item.itemId)?.itemTotal || (item.weight * unitPrice * item.quantity);
+        return {
+          ...item,
+          unitPrice,
+          total,
+        };
+      }),
       pickupAddress: createOrderDto.pickupAddress,
       deliveryAddress: createOrderDto.deliveryAddress,
       preferredPickupTime: createOrderDto.preferredPickupTime ? new Date(createOrderDto.preferredPickupTime) : undefined,
