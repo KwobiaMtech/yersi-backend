@@ -121,4 +121,45 @@ export class VendorsRepository {
       },
     ]);
   }
+
+  async findByService(serviceId: string): Promise<any[]> {
+    return this.vendorModel.aggregate([
+      {
+        $lookup: {
+          from: 'vendorservices',
+          localField: '_id',
+          foreignField: 'vendorId',
+          as: 'vendorServices',
+        },
+      },
+      {
+        $match: {
+          isActive: true,
+          'vendorServices.serviceId': new Types.ObjectId(serviceId),
+          'vendorServices.isAvailable': true,
+        },
+      },
+      {
+        $addFields: {
+          serviceDetails: {
+            $arrayElemAt: [
+              {
+                $filter: {
+                  input: '$vendorServices',
+                  cond: { $eq: ['$$this.serviceId', new Types.ObjectId(serviceId)] },
+                },
+              },
+              0,
+            ],
+          },
+        },
+      },
+      {
+        $project: {
+          vendorServices: 0,
+        },
+      },
+      { $sort: { rating: -1, name: 1 } },
+    ]);
+  }
 }

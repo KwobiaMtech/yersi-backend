@@ -58,6 +58,49 @@ export class VendorsController {
     return this.vendorsService.searchVendors(searchDto);
   }
 
+  @Get('service/:serviceId')
+  @ApiOperation({ 
+    summary: 'Get vendors by service',
+    description: 'Get all vendors that offer a specific service'
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Vendors offering the service',
+    schema: {
+      example: {
+        vendors: [
+          {
+            _id: "507f1f77bcf86cd799439021",
+            name: "Clean Express Laundromat",
+            rating: 4.5,
+            totalReviews: 128,
+            address: {
+              street: "123 Oxford Street",
+              city: "Accra",
+              region: "Greater Accra"
+            },
+            deliveryFee: 10,
+            estimatedPickupTime: 30,
+            contact: "+233201234567",
+            businessHours: "8:00 AM - 8:00 PM",
+            serviceDetails: {
+              price: 15,
+              turnaroundHours: 24,
+              isAvailable: true
+            }
+          }
+        ],
+        total: 5,
+        serviceId: "507f1f77bcf86cd799439011"
+      }
+    }
+  })
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(300)
+  async getVendorsByService(@Param('serviceId') serviceId: string) {
+    return this.vendorsService.getVendorsByService(serviceId);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get vendor by ID' })
   @UseInterceptors(CacheInterceptor)
