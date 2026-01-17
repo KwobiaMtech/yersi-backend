@@ -108,4 +108,53 @@ export class VendorsController {
   async getVendor(@Param('id') id: string) {
     return this.vendorsService.getVendorById(id);
   }
+
+  @Get(':id/services')
+  @ApiOperation({ 
+    summary: 'Get all services offered by a vendor',
+    description: 'Returns all available services that a specific vendor offers with vendor-specific pricing'
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Services offered by the vendor',
+    schema: {
+      example: {
+        vendorId: "507f1f77bcf86cd799439021",
+        services: [
+          {
+            _id: "507f1f77bcf86cd799439011",
+            name: "Laundry",
+            description: "Basic laundry service",
+            icon: "wash",
+            colorTheme: "#4CAF50",
+            basePrice: 15,
+            vendorPrice: 12,
+            turnaroundHours: 24,
+            minimumOrder: 5,
+            specialFeatures: ["Express delivery", "Eco-friendly"],
+            isAvailable: true
+          },
+          {
+            _id: "507f1f77bcf86cd799439012",
+            name: "Dry Cleaning",
+            description: "Professional dry cleaning",
+            icon: "dry-clean",
+            colorTheme: "#2196F3",
+            basePrice: 25,
+            vendorPrice: 22,
+            turnaroundHours: 48,
+            minimumOrder: 3,
+            specialFeatures: [],
+            isAvailable: true
+          }
+        ],
+        total: 2
+      }
+    }
+  })
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(300)
+  async getVendorServices(@Param('id') id: string) {
+    return this.vendorsService.getVendorServices(id);
+  }
 }

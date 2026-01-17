@@ -93,6 +93,15 @@ export class VendorsService {
     };
   }
 
+  async getVendorServices(vendorId: string): Promise<any> {
+    const services = await this.vendorsRepository.findServicesOfferedByVendor(vendorId);
+    return {
+      vendorId,
+      services,
+      total: services.length,
+    };
+  }
+
   private formatVendorResponse(vendors: any[], searchDto: SearchVendorsDto, userLocation?: { userLat: number; userLng: number }) {
     // Sort vendors
     let sortedVendors = [...vendors];
