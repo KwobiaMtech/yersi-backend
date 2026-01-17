@@ -150,6 +150,10 @@ export class OrdersService {
 
   async createOrder(createOrderDto: CreateOrderDto) {
     try {
+      if (!this.context.userId) {
+        throw new BadRequestException('User authentication required');
+      }
+
       // Validate serviceId exists
       const service = await this.servicesRepository.findById(createOrderDto.serviceId);
       if (!service) {
