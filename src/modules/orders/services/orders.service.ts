@@ -1,4 +1,4 @@
-import { Injectable, Inject, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, Inject, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { AppRequestContext } from '../../../common/context/app-request-context';
@@ -14,6 +14,8 @@ import { OrderStatus } from '../schemas/order.schema';
 
 @Injectable()
 export class OrdersService {
+  private readonly logger = new Logger(OrdersService.name);
+
   constructor(
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private servicesRepository: ServicesRepository,
@@ -29,153 +31,163 @@ export class OrdersService {
   }
 
   async calculateOrder(calculateDto: CalculateOrderDto): Promise<OrderCalculationResponseDto> {
-    const cacheKey = `order-calc-${JSON.stringify(calculateDto)}`;
-    
-    const cached = await this.cacheManager.get<OrderCalculationResponseDto>(cacheKey);
-    if (cached) return cached;
+    try {
+      const cacheKey = `order-calc-${JSON.stringify(calculateDto)}`;
+      
+      const cached = await this.cacheManager.get<OrderCalculationResponseDto>(cacheKey);
+      if (cached) return cached;
 
-    // Validate service exists
-    const service = await this.servicesRepository.findById(calculateDto.serviceId);
-    if (!service) {
-      throw new NotFoundException(`Service with ID ${calculateDto.serviceId} not found`);
-    }
-
-    const DEFAULT_DELIVERY_FEE = 5;
-    const PROMO_DISCOUNT_AMOUNT = 5;
-    const WEIGHT_VARIATION_PERCENTAGE = 0.2; // ±20%
-    const MINIMUM_ORDER_AMOUNT = 100;
-
-    let deliveryFee = DEFAULT_DELIVERY_FEE;
-    let servicePrice = service.basePrice;
-    let vendor = null;
-    let vendorService = null;
-
-    // If vendor is specified, get vendor-specific pricing
-    if (calculateDto.vendorId) {
-      vendor = await this.vendorsRepository.findById(calculateDto.vendorId);
-      if (!vendor) {
-        throw new NotFoundException(`Vendor with ID ${calculateDto.vendorId} not found`);
+      // Validate service exists
+      const service = await this.servicesRepository.findById(calculateDto.serviceId);
+      if (!service) {
+        throw new NotFoundException(`Service with ID ${calculateDto.serviceId} not found`);
       }
 
-      // Check if vendor offers this service
-      const vendorServices = await this.vendorServiceRepository.findByVendorId(calculateDto.vendorId);
-      vendorService = vendorServices.find(vs => vs.serviceId.toString() === calculateDto.serviceId);
-      
-      if (!vendorService || !vendorService.isAvailable) {
-        throw new BadRequestException(`Vendor does not offer this service or service is unavailable`);
+      const DEFAULT_DELIVERY_FEE = 5;
+      const PROMO_DISCOUNT_AMOUNT = 5;
+      const WEIGHT_VARIATION_PERCENTAGE = 0.2; // ±20%
+      const MINIMUM_ORDER_AMOUNT = 100;
+
+      let deliveryFee = DEFAULT_DELIVERY_FEE;
+      let servicePrice = service.basePrice;
+      let vendor = null;
+      let vendorService = null;
+
+      // If vendor is specified, get vendor-specific pricing
+      if (calculateDto.vendorId) {
+        vendor = await this.vendorsRepository.findById(calculateDto.vendorId);
+        if (!vendor) {
+          throw new NotFoundException(`Vendor with ID ${calculateDto.vendorId} not found`);
+        }
+
+        // Check if vendor offers this service
+        const vendorServices = await this.vendorServiceRepository.findByVendorId(calculateDto.vendorId);
+        vendorService = vendorServices.find(vs => vs.serviceId.toString() === calculateDto.serviceId);
+        
+        if (!vendorService || !vendorService.isAvailable) {
+          throw new BadRequestException(`Vendor does not offer this service or service is unavailable`);
+        }
+
+        deliveryFee = vendor.deliveryFee;
+        servicePrice = vendorService.price;
       }
 
-      deliveryFee = vendor.deliveryFee;
-      servicePrice = vendorService.price;
-    }
+      // Calculate totals and item breakdown
+      let totalWeight = 0;
+      let totalItems = 0;
+      let subtotal = 0;
+      let baseSubtotal = 0;
+      const itemBreakdown = [];
 
-    // Calculate totals and item breakdown
-    let totalWeight = 0;
-    let totalItems = 0;
-    let subtotal = 0;
-    let baseSubtotal = 0;
-    const itemBreakdown = [];
+      calculateDto.items.forEach(item => {
+        totalWeight += item.weight * item.quantity;
+        totalItems += item.quantity;
+        
+        const vendorItemTotal = (item.weight * servicePrice) * item.quantity;
+        const baseItemTotal = (item.weight * service.basePrice) * item.quantity;
+        
+        subtotal += vendorItemTotal;
+        baseSubtotal += baseItemTotal;
 
-    calculateDto.items.forEach(item => {
-      totalWeight += item.weight * item.quantity;
-      totalItems += item.quantity;
+        // Add to breakdown if vendor is selected
+        if (vendor) {
+          itemBreakdown.push({
+            itemId: item.itemId,
+            name: item.name,
+            basePrice: service.basePrice,
+            vendorPrice: servicePrice,
+            quantity: item.quantity,
+            weight: item.weight,
+            itemTotal: vendorItemTotal,
+            savings: baseItemTotal - vendorItemTotal,
+          });
+        }
+      });
+
+      const promoDiscount = calculateDto.promoCode ? PROMO_DISCOUNT_AMOUNT : 0;
       
-      const vendorItemTotal = (item.weight * servicePrice) * item.quantity;
-      const baseItemTotal = (item.weight * service.basePrice) * item.quantity;
+      // Estimated range (±20% variation) - based on subtotal only
+      const estimatedMinTotal = Math.round((subtotal * (1 - WEIGHT_VARIATION_PERCENTAGE)) + deliveryFee - promoDiscount);
+      const estimatedMaxTotal = Math.round((subtotal * (1 + WEIGHT_VARIATION_PERCENTAGE)) + deliveryFee - promoDiscount);
       
-      subtotal += vendorItemTotal;
-      baseSubtotal += baseItemTotal;
+      const currentTotal = subtotal + deliveryFee - promoDiscount;
+      const minimumOrderMet = currentTotal >= MINIMUM_ORDER_AMOUNT;
+      const needsAdditionalAmount = minimumOrderMet ? 0 : MINIMUM_ORDER_AMOUNT - currentTotal;
 
-      // Add to breakdown if vendor is selected
-      if (vendor) {
-        itemBreakdown.push({
-          itemId: item.itemId,
-          name: item.name,
-          basePrice: service.basePrice,
-          vendorPrice: servicePrice,
-          quantity: item.quantity,
-          weight: item.weight,
-          itemTotal: vendorItemTotal,
-          savings: baseItemTotal - vendorItemTotal,
-        });
-      }
-    });
-
-    const promoDiscount = calculateDto.promoCode ? PROMO_DISCOUNT_AMOUNT : 0;
-    
-    // Estimated range (±20% variation) - based on subtotal only
-    const estimatedMinTotal = Math.round((subtotal * (1 - WEIGHT_VARIATION_PERCENTAGE)) + deliveryFee - promoDiscount);
-    const estimatedMaxTotal = Math.round((subtotal * (1 + WEIGHT_VARIATION_PERCENTAGE)) + deliveryFee - promoDiscount);
-    
-    const currentTotal = subtotal + deliveryFee - promoDiscount;
-    const minimumOrderMet = currentTotal >= MINIMUM_ORDER_AMOUNT;
-    const needsAdditionalAmount = minimumOrderMet ? 0 : MINIMUM_ORDER_AMOUNT - currentTotal;
-
-    const calculation: OrderCalculationResponseDto = {
-      totalWeight,
-      totalItems,
-      subtotal: Math.round(subtotal * 100) / 100,
-      deliveryFee,
-      promoDiscount,
-      estimatedMinTotal,
-      estimatedMaxTotal,
-      currency: 'GHS',
-      needsAdditionalAmount: Math.max(0, needsAdditionalAmount),
-      minimumOrderMet,
-    };
-
-    // Add vendor pricing details if vendor is selected
-    if (vendor && vendorService) {
-      calculation.vendorPricing = {
-        vendor: {
-          id: vendor._id.toString(),
-          name: vendor.name,
-          deliveryFee: vendor.deliveryFee,
-        },
-        itemBreakdown,
-        comparedToBase: Math.round(((baseSubtotal + DEFAULT_DELIVERY_FEE) - (subtotal + deliveryFee)) * 100) / 100,
+      const calculation: OrderCalculationResponseDto = {
+        totalWeight,
+        totalItems,
+        subtotal: Math.round(subtotal * 100) / 100,
+        deliveryFee,
+        promoDiscount,
+        estimatedMinTotal,
+        estimatedMaxTotal,
+        currency: 'GHS',
+        needsAdditionalAmount: Math.max(0, needsAdditionalAmount),
+        minimumOrderMet,
       };
+
+      // Add vendor pricing details if vendor is selected
+      if (vendor && vendorService) {
+        calculation.vendorPricing = {
+          vendor: {
+            id: vendor._id.toString(),
+            name: vendor.name,
+            deliveryFee: vendor.deliveryFee,
+          },
+          itemBreakdown,
+          comparedToBase: Math.round(((baseSubtotal + DEFAULT_DELIVERY_FEE) - (subtotal + deliveryFee)) * 100) / 100,
+        };
+      }
+      
+      await this.cacheManager.set(cacheKey, calculation, 300);
+      return calculation;
+    } catch (error) {
+      this.logger.error('Failed to calculate order', error.stack, { calculateDto });
+      throw error;
     }
-    
-    await this.cacheManager.set(cacheKey, calculation, 300);
-    return calculation;
   }
 
   async createOrder(createOrderDto: CreateOrderDto) {
-    // Validate serviceId exists
-    const service = await this.servicesRepository.findById(createOrderDto.serviceId);
-    if (!service) {
-      throw new NotFoundException(`Service with ID ${createOrderDto.serviceId} not found`);
-    }
-
-    // Validate vendor if provided
-    if (createOrderDto.vendorId) {
-      const vendor = await this.vendorsRepository.findById(createOrderDto.vendorId);
-      if (!vendor) {
-        throw new NotFoundException(`Vendor with ID ${createOrderDto.vendorId} not found`);
+    try {
+      // Validate serviceId exists
+      const service = await this.servicesRepository.findById(createOrderDto.serviceId);
+      if (!service) {
+        throw new NotFoundException(`Service with ID ${createOrderDto.serviceId} not found`);
       }
 
-      const vendorServices = await this.vendorServiceRepository.findByVendorId(createOrderDto.vendorId);
-      const vendorService = vendorServices.find(vs => vs.serviceId.toString() === createOrderDto.serviceId);
+      // Validate vendor if provided
+      if (createOrderDto.vendorId) {
+        const vendor = await this.vendorsRepository.findById(createOrderDto.vendorId);
+        if (!vendor) {
+          throw new NotFoundException(`Vendor with ID ${createOrderDto.vendorId} not found`);
+        }
+
+        const vendorServices = await this.vendorServiceRepository.findByVendorId(createOrderDto.vendorId);
+        const vendorService = vendorServices.find(vs => vs.serviceId.toString() === createOrderDto.serviceId);
+        
+        if (!vendorService || !vendorService.isAvailable) {
+          throw new BadRequestException(`Vendor does not offer this service or service is unavailable`);
+        }
+      }
+
+      // Calculate order totals
+      const calculation = await this.calculateOrder({
+        serviceId: createOrderDto.serviceId,
+        vendorId: createOrderDto.vendorId,
+        items: createOrderDto.items,
+      });
+
+      // Create order in database
+      const orderData = this.orderMapper.toCreateData(createOrderDto, calculation, this.context.userId, service);
+      const order = await this.ordersRepository.create(orderData);
       
-      if (!vendorService || !vendorService.isAvailable) {
-        throw new BadRequestException(`Vendor does not offer this service or service is unavailable`);
-      }
+      await this.cacheManager.del(`user-orders-${this.context.userId}`);
+      return this.orderMapper.toResponse(order);
+    } catch (error) {
+      this.logger.error(`Failed to create order for user ${this.context.userId}`, error.stack, { createOrderDto });
+      throw error;
     }
-
-    // Calculate order totals
-    const calculation = await this.calculateOrder({
-      serviceId: createOrderDto.serviceId,
-      vendorId: createOrderDto.vendorId,
-      items: createOrderDto.items,
-    });
-
-    // Create order in database
-    const orderData = this.orderMapper.toCreateData(createOrderDto, calculation, this.context.userId, service);
-    const order = await this.ordersRepository.create(orderData);
-    
-    await this.cacheManager.del(`user-orders-${this.context.userId}`);
-    return this.orderMapper.toResponse(order);
   }
 
   async getUserOrders() {
