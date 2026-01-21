@@ -71,8 +71,8 @@ export class VendorsService {
 
     console.log("vendors found 1:", vendors.length);
 
-    // Add distance calculations if requested
-    if (searchDto.includeDistance && vendors.length > 0) {
+    // Calculate actual road distance using Google Maps for all vendors
+    if (vendors.length > 0) {
       const vendorsWithDistance = await Promise.all(
         vendors.map(async (vendor) => {
           const [vendorLng, vendorLat] = vendor.location.coordinates;
@@ -90,6 +90,7 @@ export class VendorsService {
 
           return {
             ...vendor,
+            distanceKm: distance.distance,
             distance: distance.distance,
             distanceText: distance.distanceText,
             duration: distance.duration,
