@@ -105,8 +105,29 @@ export class LocationService {
     try {
       return await this.provider.calculateDistance(userLat, userLng, vendorLat, vendorLng);
     } catch (error) {
-      // Fallback to Haversine distance
       return this.fallbackDistance(userLat, userLng, vendorLat, vendorLng);
+    }
+  }
+
+  async calculateDistanceBatch(
+    userLat: number,
+    userLng: number,
+    destinations: Array<{ lat: number; lng: number }>,
+  ) {
+    try {
+      if (this.provider['calculateDistanceBatch']) {
+        return await this.provider['calculateDistanceBatch'](userLat, userLng, destinations);
+      }
+      // Fallback to individual calls if batch not supported
+      return Promise.all(
+        destinations.map(dest => 
+          this.calculateDistance(userLat, userLng, dest.lat, dest.lng)
+        )
+      );
+    } catch (error) {
+      return destinations.map(dest => 
+        this.fallbackDistance(userLat, userLng, dest.lat, dest.lng)
+      );
     }
   }
 

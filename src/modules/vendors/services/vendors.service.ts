@@ -71,34 +71,28 @@ export class VendorsService {
 
     console.log("vendors found 1:", vendors.length);
 
-    // Calculate actual road distance using Google Maps for all vendors
+    // Calculate actual road distance using Google Maps batch API
     if (vendors.length > 0) {
-      const vendorsWithDistance = await Promise.all(
-        vendors.map(async (vendor) => {
-          const [vendorLng, vendorLat] = vendor.location.coordinates;
+      const destinations = vendors.map(vendor => ({
+        lat: vendor.location.coordinates[1],
+        lng: vendor.location.coordinates[0],
+      }));
 
-          console.log("Calculating distance for vendor:", vendor._id, {
-            vendorLat,
-            vendorLng,
-          });
-          const distance = await this.locationService.calculateDistance(
-            userLat,
-            userLng,
-            vendorLat,
-            vendorLng,
-          );
-
-          return {
-            ...vendor,
-            distanceKm: distance.distance,
-            distance: distance.distance,
-            distanceText: distance.distanceText,
-            duration: distance.duration,
-            durationText: distance.durationText,
-            distanceStatus: distance.status,
-          };
-        }),
+      const distances = await this.locationService.calculateDistanceBatch(
+        userLat,
+        userLng,
+        destinations,
       );
+
+      const vendorsWithDistance = vendors.map((vendor, index) => ({
+        ...vendor,
+        distanceKm: distances[index].distance,
+        distance: distances[index].distance,
+        distanceText: distances[index].distanceText,
+        duration: distances[index].duration,
+        durationText: distances[index].durationText,
+        distanceStatus: distances[index].status,
+      }));
 
       return this.formatVendorResponse(vendorsWithDistance, searchDto, {
         userLat,

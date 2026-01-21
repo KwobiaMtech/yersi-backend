@@ -114,12 +114,6 @@ export class GoogleMapsProvider implements LocationProvider {
     vendorLat: number,
     vendorLng: number,
   ): Promise<DistanceResponse> {
-    console.log(this.calculateDistance.name, {
-      userLat,
-      userLng,
-      vendorLat,
-      vendorLng,
-    });
     if (!this.apiKey) {
       return this.fallbackDistance(userLat, userLng, vendorLat, vendorLng);
     }
@@ -134,8 +128,6 @@ export class GoogleMapsProvider implements LocationProvider {
           key: this.apiKey,
         },
       });
-
-      console.log("Distance Matrix response:", response.data);
 
       const element = response.data.rows[0].elements[0];
 
@@ -152,6 +144,58 @@ export class GoogleMapsProvider implements LocationProvider {
       };
     } catch (error) {
       return this.fallbackDistance(userLat, userLng, vendorLat, vendorLng);
+    }
+  }
+
+  async calculateDistanceBatch(
+    userLat: number,
+    userLng: number,
+    destinations: Array<{ lat: number; lng: number }>,
+  ): Promise<DistanceResponse[]> {
+    if (!this.apiKey || destinations.length === 0) {
+      return destinations.map(dest => 
+        this.fallbackDistance(userLat, userLng, dest.lat, dest.lng)
+      );
+    }
+
+    try {
+      const destinationsStr = destinations.map(d => `${d.lat},${d.lng}`).join('|');
+      
+      const response = await axios.get(`${this.baseUrl}/distancematrix/json`, {
+        params: {
+          origins: `${userLat},${userLng}`,
+          destinations: destinationsStr,
+          units: "metric",
+          mode: "driving",
+          key: this.apiKey,
+        },
+      });
+
+      console.log("Batch Distance Matrix response:", response.data.status);
+
+      if (response.data.status !== "OK" || !response.data.rows[0]) {
+        return destinations.map(dest => 
+          this.fallbackDistance(userLat, userLng, dest.lat, dest.lng)
+        );
+      }
+
+      return response.data.rows[0].elements.map((element: any, index: number) => {
+        if (element.status !== "OK") {
+          return this.fallbackDistance(userLat, userLng, destinations[index].lat, destinations[index].lng);
+        }
+
+        return {
+          distance: element.distance.value / 1000,
+          distanceText: element.distance.text,
+          duration: element.duration.value / 60,
+          durationText: element.duration.text,
+          status: "calculated",
+        };
+      });
+    } catch (error) {
+      return destinations.map(dest => 
+        this.fallbackDistance(userLat, userLng, dest.lat, dest.lng)
+      );
     }
   }
 
