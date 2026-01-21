@@ -222,10 +222,20 @@ export class GoogleMapsProvider implements LocationProvider {
             );
           }
 
-          return {
-            distance: element.distance.value / 1000,
+          console.log(
+            `Distance to destination ${index}: ${element.distance.text}, Duration: ${element.duration.text}`,
+          );
+          console.log({
+            distance: Math.round((element.distance.value / 1000) * 100) / 100,
             distanceText: element.distance.text,
-            duration: element.duration.value / 60,
+            duration: Math.round(element.duration.value / 60),
+            durationText: element.duration.text,
+            status: "calculated",
+          });
+          return {
+            distance: Math.round((element.distance.value / 1000) * 100) / 100,
+            distanceText: element.distance.text,
+            duration: Math.round(element.duration.value / 60),
             durationText: element.duration.text,
             status: "calculated",
           };
