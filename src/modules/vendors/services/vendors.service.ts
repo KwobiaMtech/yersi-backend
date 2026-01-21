@@ -79,15 +79,18 @@ export class VendorsService {
         destinations,
       );
 
-      const vendorsWithDistance = vendors.map((vendor, index) => ({
-        ...vendor,
-        distanceKm: distances[index].distance,
-        distance: distances[index].distance,
-        distanceText: distances[index].distanceText,
-        duration: distances[index].duration,
-        durationText: distances[index].durationText,
-        distanceStatus: distances[index].status,
-      }));
+      const vendorsWithDistance = vendors.map((vendor, index) => {
+        const { distanceKm, distanceMeters, ...vendorData } = vendor;
+        return {
+          ...vendorData,
+          distance: distances[index].distance,
+          distanceText: distances[index].distanceText,
+          duration: distances[index].duration,
+          durationText: distances[index].durationText,
+          distanceStatus: distances[index].status,
+        };
+      })
+      .sort((a, b) => a.distance - b.distance);
 
       return this.formatVendorResponse(vendorsWithDistance, searchDto, {
         userLat,
