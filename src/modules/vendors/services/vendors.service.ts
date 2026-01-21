@@ -23,61 +23,64 @@ export class VendorsService {
   async searchVendors(searchDto: SearchVendorsDto): Promise<any> {
     let userLat: number;
     let userLng: number;
-    let order: Order;
 
     // If orderId is provided, use order's pickup address
     if (searchDto.orderId) {
-      order = await this.ordersRepository.findById(searchDto.orderId);
+      const order = await this.ordersRepository.findById(searchDto.orderId);
       console.log("Order found:", order?._id);
       console.log("Pickup address:", JSON.stringify(order?.pickupAddress));
       if (order?.pickupAddress?.latitude && order?.pickupAddress?.longitude) {
         userLat = order.pickupAddress.latitude;
         userLng = order.pickupAddress.longitude;
         console.log("Using order coordinates:", { userLat, userLng });
+      } else {
+        throw new Error('Order pickup address does not have valid coordinates');
       }
     }
-
-    // Get user coordinates from different input methods if not set from order
-    if (!userLat || !userLng) {
-      if (searchDto.latitude && searchDto.longitude) {
-        userLat = searchDto.latitude;
-        userLng = searchDto.longitude;
-      } else if (searchDto.placeId) {
-        const location = await this.locationService.getPlaceDetails(
-          searchDto.placeId,
-        );
-        userLat = location.latitude;
-        userLng = location.longitude;
-      } else if (searchDto.address) {
-        const location = await this.locationService.geocodeAddress(
-          searchDto.address,
-        );
-        userLat = location.latitude;
-        userLng = location.longitude;
-      } else {
-        // Return all vendors without location filtering
-        const vendors = await this.vendorsRepository.findAll(
-          searchDto.serviceId,
-        );
-        return this.formatVendorResponse(vendors, searchDto);
-      }
+    // Get user coordinates from different input methods if orderId not provided
+    else if (searchDto.latitude && searchDto.longitude) {
+      userLat = searchDto.latitude;
+      userLng = searchDto.longitude;
+    } else if (searchDto.placeId) {
+      const location = await this.locationService.getPlaceDetails(
+        searchDto.placeId,
+      );
+      userLat = location.latitude;
+      userLng = location.longitude;
+    } else if (searchDto.address) {
+      const location = await this.locationService.geocodeAddress(
+        searchDto.address,
+      );
+      userLat = location.latitude;
+      userLng = location.longitude;
+    } else {
+      // Return all vendors without location filtering
+      const vendors = await this.vendorsRepository.findAll(
+        searchDto.serviceId,
+      );
+      return this.formatVendorResponse(vendors, searchDto);
     }
 
     // Search vendors near the user location
     const vendors = await this.vendorsRepository.findNearby(
       userLng,
       userLat,
-      order?.serviceId || searchDto.serviceId,
+      searchDto.serviceId,
       searchDto.radius,
     );
 
-    console.log("vendors found:", vendors.length);
+    console.log("vendors found 1:", vendors.length);
 
     // Add distance calculations if requested
     if (searchDto.includeDistance && vendors.length > 0) {
       const vendorsWithDistance = await Promise.all(
         vendors.map(async (vendor) => {
           const [vendorLng, vendorLat] = vendor.location.coordinates;
+
+          console.log("Calculating distance for vendor:", vendor._id, {
+            vendorLat,
+            vendorLng,
+          });
           const distance = await this.locationService.calculateDistance(
             userLat,
             userLng,
