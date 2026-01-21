@@ -207,6 +207,10 @@ export class GoogleMapsProvider implements LocationProvider {
         );
       }
 
+      console.log(
+        "Full response data:",
+        JSON.stringify(response.data, null, 2),
+      );
       return response.data.rows[0].elements.map(
         (element: any, index: number) => {
           if (element.status !== "OK") {
@@ -228,6 +232,7 @@ export class GoogleMapsProvider implements LocationProvider {
         },
       );
     } catch (error) {
+      console.error("Error in batch distance calculation:", error);
       return destinations.map((dest) =>
         this.fallbackDistance(userLat, userLng, dest.lat, dest.lng),
       );
