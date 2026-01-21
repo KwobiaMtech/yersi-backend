@@ -27,12 +27,9 @@ export class VendorsService {
     // If orderId is provided, use order's pickup address
     if (searchDto.orderId) {
       const order = await this.ordersRepository.findById(searchDto.orderId);
-      console.log("Order found:", order?._id);
-      console.log("Pickup address:", JSON.stringify(order?.pickupAddress));
       if (order?.pickupAddress?.latitude && order?.pickupAddress?.longitude) {
         userLat = order.pickupAddress.latitude;
         userLng = order.pickupAddress.longitude;
-        console.log("Using order coordinates:", { userLat, userLng });
       } else {
         throw new Error('Order pickup address does not have valid coordinates');
       }
@@ -68,8 +65,6 @@ export class VendorsService {
       searchDto.serviceId,
       searchDto.radius,
     );
-
-    console.log("vendors found 1:", vendors.length);
 
     // Calculate actual road distance using Google Maps batch API
     if (vendors.length > 0) {

@@ -18,8 +18,6 @@ export class VendorsRepository {
     serviceId?: string,
     radiusKm: number = 10,
   ): Promise<any[]> {
-    console.log('findNearby called with:', { longitude, latitude, serviceId, radiusKm });
-    
     const pipeline: any[] = [
       {
         $geoNear: {
@@ -68,12 +66,7 @@ export class VendorsRepository {
       { $sort: { distanceKm: 1, rating: -1 } }
     );
 
-    const results = await this.vendorModel.aggregate(pipeline);
-    console.log('Vendors found:', results.length);
-    if (results.length > 0) {
-      console.log('First vendor distance:', results[0].distanceKm, 'km');
-    }
-    return results;
+    return this.vendorModel.aggregate(pipeline);
   }
 
   async findAll(serviceId?: string): Promise<any[]> {

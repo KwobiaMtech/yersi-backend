@@ -195,22 +195,12 @@ export class GoogleMapsProvider implements LocationProvider {
         },
       });
 
-      console.log(
-        "Batch Distance Matrix response:",
-        response.data.status,
-        `(${destinations.length} destinations)`,
-      );
-
       if (response.data.status !== "OK" || !response.data.rows[0]) {
         return destinations.map((dest) =>
           this.fallbackDistance(userLat, userLng, dest.lat, dest.lng),
         );
       }
 
-      console.log(
-        "Full response data:",
-        JSON.stringify(response.data, null, 2),
-      );
       return response.data.rows[0].elements.map(
         (element: any, index: number) => {
           if (element.status !== "OK") {
@@ -222,18 +212,8 @@ export class GoogleMapsProvider implements LocationProvider {
             );
           }
 
-          console.log(
-            `Distance to destination ${index}: ${element.distance.text}, Duration: ${element.duration.text}`,
-          );
-          console.log({
-            distance: Math.round((element.distance.value / 1000) * 100) / 100,
-            distanceText: element.distance.text,
-            duration: Math.round(element.duration.value / 60),
-            durationText: element.duration.text,
-            status: "calculated",
-          });
           return {
-            distance: Math.round((element.distance.value / 1000) * 100) / 100,
+            distance: parseFloat((element.distance.value / 1000).toFixed(2)),
             distanceText: element.distance.text,
             duration: Math.round(element.duration.value / 60),
             durationText: element.duration.text,
@@ -242,7 +222,6 @@ export class GoogleMapsProvider implements LocationProvider {
         },
       );
     } catch (error) {
-      console.error("Error in batch distance calculation:", error);
       return destinations.map((dest) =>
         this.fallbackDistance(userLat, userLng, dest.lat, dest.lng),
       );
