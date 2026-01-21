@@ -158,6 +158,24 @@ export class GoogleMapsProvider implements LocationProvider {
       );
     }
 
+    const BATCH_SIZE = 25; // Google's limit
+    const results: DistanceResponse[] = [];
+
+    // Process in chunks of 25
+    for (let i = 0; i < destinations.length; i += BATCH_SIZE) {
+      const chunk = destinations.slice(i, i + BATCH_SIZE);
+      const chunkResults = await this.processBatchChunk(userLat, userLng, chunk);
+      results.push(...chunkResults);
+    }
+
+    return results;
+  }
+
+  private async processBatchChunk(
+    userLat: number,
+    userLng: number,
+    destinations: Array<{ lat: number; lng: number }>,
+  ): Promise<DistanceResponse[]> {
     try {
       const destinationsStr = destinations.map(d => `${d.lat},${d.lng}`).join('|');
       
@@ -171,7 +189,7 @@ export class GoogleMapsProvider implements LocationProvider {
         },
       });
 
-      console.log("Batch Distance Matrix response:", response.data.status);
+      console.log("Batch Distance Matrix response:", response.data.status, `(${destinations.length} destinations)`);
 
       if (response.data.status !== "OK" || !response.data.rows[0]) {
         return destinations.map(dest => 
