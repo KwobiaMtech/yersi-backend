@@ -114,6 +114,12 @@ export class GoogleMapsProvider implements LocationProvider {
     vendorLat: number,
     vendorLng: number,
   ): Promise<DistanceResponse> {
+    console.log(this.calculateDistance.name, {
+      userLat,
+      userLng,
+      vendorLat,
+      vendorLng,
+    });
     if (!this.apiKey) {
       return this.fallbackDistance(userLat, userLng, vendorLat, vendorLng);
     }
