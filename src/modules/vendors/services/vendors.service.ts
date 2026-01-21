@@ -71,6 +71,8 @@ export class VendorsService {
       searchDto.radius,
     );
 
+    console.log("vendors found:", vendors.length);
+
     // Add distance calculations if requested
     if (searchDto.includeDistance && vendors.length > 0) {
       const vendorsWithDistance = await Promise.all(
