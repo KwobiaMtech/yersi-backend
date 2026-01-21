@@ -3,6 +3,7 @@ import { VendorsRepository } from '../repositories/vendors.repository';
 import { SearchVendorsDto } from '../dto/vendor.dto';
 import { Vendor } from '../schemas/vendor.schema';
 import { LocationService } from '../../location/services/location.service';
+import { OrdersRepository } from '../../orders/repositories/orders.repository';
 
 @Injectable()
 export class VendorsService {
@@ -10,6 +11,8 @@ export class VendorsService {
     private vendorsRepository: VendorsRepository,
     @Inject(forwardRef(() => LocationService))
     private locationService: LocationService,
+    @Inject(forwardRef(() => OrdersRepository))
+    private ordersRepository: OrdersRepository,
   ) {}
 
   async create(vendorData: Partial<Vendor>): Promise<Vendor> {
@@ -20,22 +23,33 @@ export class VendorsService {
     let userLat: number;
     let userLng: number;
 
-    // Get user coordinates from different input methods
-    if (searchDto.latitude && searchDto.longitude) {
-      userLat = searchDto.latitude;
-      userLng = searchDto.longitude;
-    } else if (searchDto.placeId) {
-      const location = await this.locationService.getPlaceDetails(searchDto.placeId);
-      userLat = location.latitude;
-      userLng = location.longitude;
-    } else if (searchDto.address) {
-      const location = await this.locationService.geocodeAddress(searchDto.address);
-      userLat = location.latitude;
-      userLng = location.longitude;
-    } else {
-      // Return all vendors without location filtering
-      const vendors = await this.vendorsRepository.findAll(searchDto.serviceId);
-      return this.formatVendorResponse(vendors, searchDto);
+    // If orderId is provided, use order's pickup address
+    if (searchDto.orderId) {
+      const order = await this.ordersRepository.findById(searchDto.orderId);
+      if (order?.pickupAddress?.latitude && order?.pickupAddress?.longitude) {
+        userLat = order.pickupAddress.latitude;
+        userLng = order.pickupAddress.longitude;
+      }
+    }
+
+    // Get user coordinates from different input methods if not set from order
+    if (!userLat || !userLng) {
+      if (searchDto.latitude && searchDto.longitude) {
+        userLat = searchDto.latitude;
+        userLng = searchDto.longitude;
+      } else if (searchDto.placeId) {
+        const location = await this.locationService.getPlaceDetails(searchDto.placeId);
+        userLat = location.latitude;
+        userLng = location.longitude;
+      } else if (searchDto.address) {
+        const location = await this.locationService.geocodeAddress(searchDto.address);
+        userLat = location.latitude;
+        userLng = location.longitude;
+      } else {
+        // Return all vendors without location filtering
+        const vendors = await this.vendorsRepository.findAll(searchDto.serviceId);
+        return this.formatVendorResponse(vendors, searchDto);
+      }
     }
 
     // Search vendors near the user location

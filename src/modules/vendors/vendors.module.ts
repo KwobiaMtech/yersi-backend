@@ -7,6 +7,7 @@ import { VendorServiceRepository } from './repositories/vendor-service.repositor
 import { Vendor, VendorSchema } from './schemas/vendor.schema';
 import { VendorService, VendorServiceSchema } from './schemas/vendor-service.schema';
 import { LocationModule } from '../location/location.module';
+import { OrdersModule } from '../orders/orders.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { LocationModule } from '../location/location.module';
       { name: VendorService.name, schema: VendorServiceSchema },
     ]),
     forwardRef(() => LocationModule),
+    forwardRef(() => OrdersModule),
   ],
   controllers: [VendorsController],
   providers: [VendorsService, VendorsRepository, VendorServiceRepository],

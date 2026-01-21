@@ -34,6 +34,11 @@ export class SearchVendorsDto {
   @IsString()
   serviceId?: string;
 
+  @ApiProperty({ required: false, description: 'Order ID to use pickup address for distance calculation' })
+  @IsOptional()
+  @IsString()
+  orderId?: string;
+
   @ApiProperty({ required: false, default: 10, description: 'Search radius in km' })
   @IsOptional()
   @IsNumber()

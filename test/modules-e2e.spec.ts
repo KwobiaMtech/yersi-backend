@@ -105,6 +105,42 @@ describe('Modular E2E Tests', () => {
       expect(Array.isArray(response.body)).toBe(true);
     });
 
+    it('should search vendors using orderId pickup address', async () => {
+      // Create an order with pickup address
+      const orderResponse = await request(app.getHttpServer())
+        .post('/api/v1/orders')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          serviceId: '507f1f77bcf86cd799439011',
+          items: [{ itemId: '507f1f77bcf86cd799439012', quantity: 2, weight: 1.5, unitPrice: 10 }],
+          pickupAddress: {
+            street: '123 Test St',
+            city: 'Accra',
+            region: 'Greater Accra',
+            phone: '0241234567',
+            latitude: 5.6037,
+            longitude: -0.1870,
+          },
+          deliveryAddress: {
+            street: '456 Delivery St',
+            city: 'Accra',
+            region: 'Greater Accra',
+            phone: '0241234568',
+          },
+        })
+        .expect(201);
+
+      const orderId = orderResponse.body._id;
+
+      // Search vendors using orderId
+      const response = await request(app.getHttpServer())
+        .get('/api/v1/vendors/search')
+        .query({ orderId, radius: 10 })
+        .expect(200);
+
+      expect(Array.isArray(response.body)).toBe(true);
+    });
+
     it('should require location parameters for search', async () => {
       await request(app.getHttpServer())
         .get('/api/v1/vendors/search')
