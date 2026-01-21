@@ -1,9 +1,10 @@
-import { Injectable, Inject, forwardRef } from '@nestjs/common';
-import { VendorsRepository } from '../repositories/vendors.repository';
-import { SearchVendorsDto } from '../dto/vendor.dto';
-import { Vendor } from '../schemas/vendor.schema';
-import { LocationService } from '../../location/services/location.service';
-import { OrdersRepository } from '../../orders/repositories/orders.repository';
+import { Injectable, Inject, forwardRef } from "@nestjs/common";
+import { VendorsRepository } from "../repositories/vendors.repository";
+import { SearchVendorsDto } from "../dto/vendor.dto";
+import { Vendor } from "../schemas/vendor.schema";
+import { LocationService } from "../../location/services/location.service";
+import { OrdersRepository } from "../../orders/repositories/orders.repository";
+import { Order } from "src/modules/orders/schemas/order.schema";
 
 @Injectable()
 export class VendorsService {
@@ -22,13 +23,17 @@ export class VendorsService {
   async searchVendors(searchDto: SearchVendorsDto): Promise<any> {
     let userLat: number;
     let userLng: number;
+    let order: Order;
 
     // If orderId is provided, use order's pickup address
     if (searchDto.orderId) {
-      const order = await this.ordersRepository.findById(searchDto.orderId);
+      order = await this.ordersRepository.findById(searchDto.orderId);
+      console.log("Order found:", order?._id);
+      console.log("Pickup address:", JSON.stringify(order?.pickupAddress));
       if (order?.pickupAddress?.latitude && order?.pickupAddress?.longitude) {
         userLat = order.pickupAddress.latitude;
         userLng = order.pickupAddress.longitude;
+        console.log("Using order coordinates:", { userLat, userLng });
       }
     }
 
@@ -38,16 +43,22 @@ export class VendorsService {
         userLat = searchDto.latitude;
         userLng = searchDto.longitude;
       } else if (searchDto.placeId) {
-        const location = await this.locationService.getPlaceDetails(searchDto.placeId);
+        const location = await this.locationService.getPlaceDetails(
+          searchDto.placeId,
+        );
         userLat = location.latitude;
         userLng = location.longitude;
       } else if (searchDto.address) {
-        const location = await this.locationService.geocodeAddress(searchDto.address);
+        const location = await this.locationService.geocodeAddress(
+          searchDto.address,
+        );
         userLat = location.latitude;
         userLng = location.longitude;
       } else {
         // Return all vendors without location filtering
-        const vendors = await this.vendorsRepository.findAll(searchDto.serviceId);
+        const vendors = await this.vendorsRepository.findAll(
+          searchDto.serviceId,
+        );
         return this.formatVendorResponse(vendors, searchDto);
       }
     }
@@ -56,7 +67,7 @@ export class VendorsService {
     const vendors = await this.vendorsRepository.findNearby(
       userLng,
       userLat,
-      searchDto.serviceId,
+      order?.serviceId || searchDto.serviceId,
       searchDto.radius,
     );
 
@@ -83,7 +94,10 @@ export class VendorsService {
         }),
       );
 
-      return this.formatVendorResponse(vendorsWithDistance, searchDto, { userLat, userLng });
+      return this.formatVendorResponse(vendorsWithDistance, searchDto, {
+        userLat,
+        userLng,
+      });
     }
 
     return this.formatVendorResponse(vendors, searchDto, { userLat, userLng });
@@ -108,7 +122,8 @@ export class VendorsService {
   }
 
   async getVendorServices(vendorId: string): Promise<any> {
-    const services = await this.vendorsRepository.findServicesOfferedByVendor(vendorId);
+    const services =
+      await this.vendorsRepository.findServicesOfferedByVendor(vendorId);
     return {
       vendorId,
       services,
@@ -116,18 +131,24 @@ export class VendorsService {
     };
   }
 
-  private formatVendorResponse(vendors: any[], searchDto: SearchVendorsDto, userLocation?: { userLat: number; userLng: number }) {
+  private formatVendorResponse(
+    vendors: any[],
+    searchDto: SearchVendorsDto,
+    userLocation?: { userLat: number; userLng: number },
+  ) {
     // Sort vendors
     let sortedVendors = [...vendors];
-    
+
     switch (searchDto.sortBy) {
-      case 'rating':
+      case "rating":
         sortedVendors.sort((a, b) => (b.rating || 0) - (a.rating || 0));
         break;
-      case 'name':
-        sortedVendors.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+      case "name":
+        sortedVendors.sort((a, b) =>
+          (a.name || "").localeCompare(b.name || ""),
+        );
         break;
-      case 'distance':
+      case "distance":
       default:
         if (searchDto.includeDistance) {
           sortedVendors.sort((a, b) => (a.distance || 0) - (b.distance || 0));
@@ -154,11 +175,12 @@ export class VendorsService {
     }
 
     if (sortedVendors.length === 0) {
-      response.message = 'No vendors found in your area. Try increasing the search radius or removing service filters.';
+      response.message =
+        "No vendors found in your area. Try increasing the search radius or removing service filters.";
       response.suggestions = [
-        'Increase search radius to 20km',
-        'Remove service type filter',
-        'Check if your location is correct',
+        "Increase search radius to 20km",
+        "Remove service type filter",
+        "Check if your location is correct",
       ];
     }
 
