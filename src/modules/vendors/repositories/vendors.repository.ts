@@ -25,7 +25,7 @@ export class VendorsRepository {
             type: 'Point',
             coordinates: [longitude, latitude],
           },
-          distanceField: 'distanceKm',
+          distanceField: 'distanceMeters',
           maxDistance: radiusKm * 1000,
           spherical: true,
         },
@@ -58,7 +58,9 @@ export class VendorsRepository {
     pipeline.push(
       {
         $addFields: {
-          distanceKm: { $divide: ['$distanceKm', 1000] },
+          distanceKm: { 
+            $round: [{ $divide: ['$distanceMeters', 1000] }, 2] 
+          },
         },
       },
       { $sort: { distanceKm: 1, rating: -1 } }
