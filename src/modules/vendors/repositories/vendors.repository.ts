@@ -18,6 +18,8 @@ export class VendorsRepository {
     serviceId?: string,
     radiusKm: number = 10,
   ): Promise<any[]> {
+    const COORDINATE_THRESHOLD = 0.001; // ~111 meters
+    
     const pipeline: any[] = [
       {
         $geoNear: {
@@ -31,7 +33,16 @@ export class VendorsRepository {
         },
       },
       {
-        $match: { isActive: true },
+        $match: { 
+          isActive: true,
+          // Filter out vendors with coordinates too similar to search location
+          $expr: {
+            $or: [
+              { $gt: [{ $abs: { $subtract: [{ $arrayElemAt: ['$location.coordinates', 1] }, latitude] } }, COORDINATE_THRESHOLD] },
+              { $gt: [{ $abs: { $subtract: [{ $arrayElemAt: ['$location.coordinates', 0] }, longitude] } }, COORDINATE_THRESHOLD] }
+            ]
+          }
+        },
       },
     ];
 

@@ -68,7 +68,16 @@ export class VendorsService {
 
     // Calculate actual road distance using Google Maps batch API
     if (vendors.length > 0) {
-      const destinations = vendors.map(vendor => ({
+      // Remove vendors with duplicate coordinates
+      const seen = new Set();
+      const uniqueVendors = vendors.filter(vendor => {
+        const coords = `${vendor.location.coordinates[0]},${vendor.location.coordinates[1]}`;
+        if (seen.has(coords)) return false;
+        seen.add(coords);
+        return true;
+      });
+
+      const destinations = uniqueVendors.map(vendor => ({
         lat: vendor.location.coordinates[1],
         lng: vendor.location.coordinates[0],
       }));
@@ -79,7 +88,7 @@ export class VendorsService {
         destinations,
       );
 
-      const vendorsWithDistance = vendors.map((vendor, index) => {
+      const vendorsWithDistance = uniqueVendors.map((vendor, index) => {
         const { distanceKm, distanceMeters, ...vendorData } = vendor;
         return {
           ...vendorData,
