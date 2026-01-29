@@ -559,34 +559,48 @@ export class OrdersService {
   }
 
   private async processPayment(method: PaymentMethod, amount: number, paymentDetails?: string) {
-    // Mock payment processing
-    switch (method) {
-      case PaymentMethod.MTN_MOBILE_MONEY:
-      case PaymentMethod.VODAFONE_CASH:
-      case PaymentMethod.AIRTELTIGO_MONEY:
-        return {
-          reference: `PAY_${Date.now()}`,
-          paymentUrl: `https://payment-gateway.com/pay/${Date.now()}`,
-          requiresConfirmation: true,
-        };
-      
-      case PaymentMethod.VISA_CARD:
-      case PaymentMethod.MASTERCARD:
-        return {
-          reference: `CARD_${Date.now()}`,
-          paymentUrl: `https://card-processor.com/pay/${Date.now()}`,
-          requiresConfirmation: true,
-        };
-      
-      case PaymentMethod.CASH_ON_DELIVERY:
-        return {
-          reference: `COD_${Date.now()}`,
-          requiresConfirmation: false,
-        };
-      
-      default:
-        throw new BadRequestException('Unsupported payment method');
+    // For mobile money, delegate to PaymentsService via OrderPaymentService
+    if ([PaymentMethod.MTN_MOBILE_MONEY, PaymentMethod.VODAFONE_CASH, PaymentMethod.AIRTELTIGO_MONEY].includes(method)) {
+      // Payment details should be JSON string with phoneNumber, accountName, mobileMoneyProvider
+      let details;
+      try {
+        details = paymentDetails ? JSON.parse(paymentDetails) : {};
+      } catch {
+        throw new BadRequestException('Invalid payment details format');
+      }
+
+      if (!details.phoneNumber || !details.accountName) {
+        throw new BadRequestException('Phone number and account name required for mobile money');
+      }
+
+      // This will be handled by OrderPaymentService in production
+      // For now, return mock response indicating integration point
+      return {
+        reference: `PAY_${Date.now()}`,
+        paymentUrl: null,
+        requiresConfirmation: true,
+        message: 'Mobile money payment will be processed via SeevCash',
+      };
     }
+    
+    // Card payments
+    if ([PaymentMethod.VISA_CARD, PaymentMethod.MASTERCARD].includes(method)) {
+      return {
+        reference: `CARD_${Date.now()}`,
+        paymentUrl: `https://card-processor.com/pay/${Date.now()}`,
+        requiresConfirmation: true,
+      };
+    }
+    
+    // Cash on delivery
+    if (method === PaymentMethod.CASH_ON_DELIVERY) {
+      return {
+        reference: `COD_${Date.now()}`,
+        requiresConfirmation: false,
+      };
+    }
+
+    throw new BadRequestException('Unsupported payment method');
   }
 
   private getCheckoutMessage(options: CheckoutOptionsDto): string {

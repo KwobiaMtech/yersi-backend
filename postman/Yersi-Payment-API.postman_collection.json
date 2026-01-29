@@ -1,0 +1,244 @@
+{
+  "info": {
+    "name": "Yersi Payment API",
+    "description": "Payment integration API with SeevCash for mobile money transactions",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "yersi-payments"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{authToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Initialize Payment",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"orderId\": \"{{orderId}}\",\n  \"paymentMethod\": \"mobile_money\",\n  \"phoneNumber\": \"+233542853417\",\n  \"accountName\": \"Patrick Oduro\",\n  \"mobileMoneyProvider\": \"MTN\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/payments/initialize",
+          "host": ["{{baseUrl}}"],
+          "path": ["payments", "initialize"]
+        },
+        "description": "Initialize a payment for an order using mobile money. Supports MTN, VODAFONE, and AIRTELTIGO providers."
+      },
+      "response": [
+        {
+          "name": "Success Response",
+          "originalRequest": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderId\": \"order-123\",\n  \"paymentMethod\": \"mobile_money\",\n  \"phoneNumber\": \"+233542853417\",\n  \"accountName\": \"Patrick Oduro\",\n  \"mobileMoneyProvider\": \"MTN\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/payments/initialize",
+              "host": ["{{baseUrl}}"],
+              "path": ["payments", "initialize"]
+            }
+          },
+          "status": "Created",
+          "code": 201,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"paymentId\": \"65f1234567890abcdef\",\n  \"transactionId\": \"DEP_38e955df-884d-4b24-9aa4-173b84c57c29\",\n  \"status\": \"PENDING\",\n  \"amount\": 100,\n  \"feeAmount\": 0.15,\n  \"userAmount\": 100.15,\n  \"reference\": \"YRS_1738148709290_order-123\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "Check Payment Status",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/payments/status/:transactionId",
+          "host": ["{{baseUrl}}"],
+          "path": ["payments", "status", ":transactionId"],
+          "variable": [
+            {
+              "key": "transactionId",
+              "value": "{{transactionId}}",
+              "description": "Transaction ID from payment initialization"
+            }
+          ]
+        },
+        "description": "Check the status of a payment transaction. Returns current status (PENDING, SUCCESS, FAILED, CANCELLED)."
+      },
+      "response": [
+        {
+          "name": "Success - Pending",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/payments/status/DEP_38e955df-884d-4b24-9aa4-173b84c57c29",
+              "host": ["{{baseUrl}}"],
+              "path": ["payments", "status", "DEP_38e955df-884d-4b24-9aa4-173b84c57c29"]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"transactionId\": \"DEP_38e955df-884d-4b24-9aa4-173b84c57c29\",\n  \"status\": \"PENDING\",\n  \"paymentId\": \"65f1234567890abcdef\"\n}"
+        },
+        {
+          "name": "Success - Completed",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/payments/status/DEP_38e955df-884d-4b24-9aa4-173b84c57c29",
+              "host": ["{{baseUrl}}"],
+              "path": ["payments", "status", "DEP_38e955df-884d-4b24-9aa4-173b84c57c29"]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"transactionId\": \"DEP_38e955df-884d-4b24-9aa4-173b84c57c29\",\n  \"status\": \"SUCCESS\",\n  \"paymentId\": \"65f1234567890abcdef\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "Get Wallet Balance",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/payments/wallet/balance/:currency",
+          "host": ["{{baseUrl}}"],
+          "path": ["payments", "wallet", "balance", ":currency"],
+          "variable": [
+            {
+              "key": "currency",
+              "value": "GHS",
+              "description": "Currency code (GHS, USD, EUR)"
+            }
+          ]
+        },
+        "description": "Get the current wallet balance for the specified currency."
+      },
+      "response": [
+        {
+          "name": "Success Response",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/payments/wallet/balance/GHS",
+              "host": ["{{baseUrl}}"],
+              "path": ["payments", "wallet", "balance", "GHS"]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"balance\": 153.62,\n  \"currency\": \"GHS\"\n}"
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Auto-set transaction ID from previous response",
+          "if (pm.response && pm.response.json()) {",
+          "    const response = pm.response.json();",
+          "    if (response.transactionId) {",
+          "        pm.environment.set('transactionId', response.transactionId);",
+          "    }",
+          "}"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Save transaction ID from response",
+          "if (pm.response.code === 201 || pm.response.code === 200) {",
+          "    const response = pm.response.json();",
+          "    if (response.transactionId) {",
+          "        pm.environment.set('transactionId', response.transactionId);",
+          "        console.log('Transaction ID saved:', response.transactionId);",
+          "    }",
+          "    if (response.paymentId) {",
+          "        pm.environment.set('paymentId', response.paymentId);",
+          "        console.log('Payment ID saved:', response.paymentId);",
+          "    }",
+          "}"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "your-jwt-token-here",
+      "type": "string"
+    },
+    {
+      "key": "orderId",
+      "value": "order-123",
+      "type": "string"
+    },
+    {
+      "key": "transactionId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "paymentId",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

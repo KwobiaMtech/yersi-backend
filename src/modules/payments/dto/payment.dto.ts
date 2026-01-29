@@ -1,4 +1,4 @@
-import { IsString, IsEnum, IsOptional, IsNumber, IsBoolean } from 'class-validator';
+import { IsString, IsEnum, IsOptional, IsNumber, IsBoolean, IsPhoneNumber } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { PaymentMethod } from '../schemas/payment.schema';
 
@@ -11,15 +11,17 @@ export class InitializePaymentDto {
   @IsEnum(PaymentMethod)
   paymentMethod: PaymentMethod;
 
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsString()
-  phone?: string;
+  @ApiProperty({ description: 'Phone number for mobile money' })
+  @IsPhoneNumber('GH')
+  phoneNumber: string;
 
-  @ApiProperty({ required: false })
-  @IsOptional()
+  @ApiProperty({ description: 'Account holder name' })
   @IsString()
-  network?: string;
+  accountName: string;
+
+  @ApiProperty({ description: 'Mobile money provider (MTN, VODAFONE, AIRTELTIGO)' })
+  @IsString()
+  mobileMoneyProvider: string;
 
   @ApiProperty({ required: false, default: false })
   @IsOptional()
@@ -30,4 +32,10 @@ export class InitializePaymentDto {
   @IsOptional()
   @IsNumber()
   creditsAmount?: number = 0;
+}
+
+export class CheckPaymentStatusDto {
+  @ApiProperty()
+  @IsString()
+  transactionId: string;
 }
