@@ -62,7 +62,11 @@ export class OrdersService {
 
         // Check if vendor offers this service
         const vendorServices = await this.vendorServiceRepository.findByVendorId(calculateDto.vendorId);
-        vendorService = vendorServices.find(vs => vs.serviceId.toString() === calculateDto.serviceId);
+        vendorService = vendorServices.find(vs => {
+          // Handle both populated and non-populated serviceId
+          const serviceIdStr = vs.serviceId._id ? vs.serviceId._id.toString() : vs.serviceId.toString();
+          return serviceIdStr === calculateDto.serviceId;
+        });
         
         if (!vendorService || !vendorService.isAvailable) {
           throw new BadRequestException(`Vendor does not offer this service or service is unavailable`);
