@@ -36,6 +36,7 @@ export class Order extends Document {
     weight: { type: Number, required: true }, // in kg
     unitPrice: { type: Number, required: true },
     total: { type: Number, required: true },
+    icon: String,
     specialInstructions: String,
   }])
   items: Array<{
@@ -47,6 +48,7 @@ export class Order extends Document {
     weight: number;
     unitPrice: number;
     total: number;
+    icon?: string;
     specialInstructions?: string;
   }>;
 

@@ -17,6 +17,7 @@ import { PromotionsModule } from "./modules/promotions/promotions.module";
 import { HealthModule } from "./health/health.module";
 import { LocationModule } from "./modules/location/location.module";
 import { AdminModule } from "./modules/admin/admin.module";
+import { UploadModule } from "./common/upload.module";
 
 import { HttpExceptionFilter } from "./common/filters/http-exception.filter";
 import { ThrottleGuard } from "./common/guards/throttle.guard";
@@ -58,6 +59,7 @@ import { SharedModule } from "./modules/shared/shared.module";
     LocationModule,
     AdminModule,
     SharedModule,
+    UploadModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: HttpExceptionFilter },

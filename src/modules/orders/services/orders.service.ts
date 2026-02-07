@@ -290,7 +290,7 @@ export class OrdersService {
 
     // Validate vendor offers the service
     const vendorServices = await this.vendorServiceRepository.findByVendorId(vendorId);
-    const vendorService = vendorServices.find(vs => vs.serviceId.toString() === order.serviceId);
+    const vendorService = vendorServices.find(vs => vs.serviceId.toString() === order.serviceId.toString());
     
     if (!vendorService || !vendorService.isAvailable) {
       throw new BadRequestException(`Vendor does not offer this service or service is unavailable`);
@@ -347,7 +347,7 @@ export class OrdersService {
       // Check if vendor offers the service
       const serviceId = updateDto.serviceId || order.serviceId;
       const vendorServices = await this.vendorServiceRepository.findByVendorId(updateDto.vendorId);
-      const vendorService = vendorServices.find(vs => vs.serviceId.toString() === serviceId);
+      const vendorService = vendorServices.find(vs => vs.serviceId.toString() === serviceId.toString());
       
       if (!vendorService || !vendorService.isAvailable) {
         throw new BadRequestException(`Vendor does not offer this service or service is unavailable`);

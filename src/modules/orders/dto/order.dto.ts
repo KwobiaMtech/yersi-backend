@@ -32,6 +32,11 @@ class OrderItemDto {
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
+  icon?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
   specialInstructions?: string;
 }
 

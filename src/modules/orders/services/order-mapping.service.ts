@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { Order, OrderStatus } from '../schemas/order.schema';
 import { OrderCalculationResponseDto, CreateOrderDto } from '../dto/order.dto';
 
+const DEFAULT_ITEM_IMAGE = 'https://s3.us-central-1.wasabisys.com/ys-uploads/defaults/item-placeholder.png';
+
 @Injectable()
 export class OrderMappingService {
   toCreateData(createOrderDto: CreateOrderDto, calculation: OrderCalculationResponseDto, userId: string, service: any) {
@@ -44,7 +46,10 @@ export class OrderMappingService {
       userId: order.userId.toString(),
       serviceId: order.serviceId,
       vendorId: order.vendorId?.toString(),
-      items: order.items,
+      items: order.items.map(item => ({
+        ...item,
+        icon: item.icon || DEFAULT_ITEM_IMAGE,
+      })),
       pickupAddress: order.pickupAddress,
       deliveryAddress: order.deliveryAddress,
       subtotal: order.subtotal,
