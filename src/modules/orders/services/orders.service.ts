@@ -309,7 +309,7 @@ export class OrdersService {
     order.subtotal = calculation.subtotal;
     order.estimatedMinTotal = calculation.estimatedMinTotal;
     order.estimatedMaxTotal = calculation.estimatedMaxTotal;
-    order.total = calculation.estimatedMaxTotal;
+    order.total = calculation.subtotal + calculation.deliveryFee - calculation.promoDiscount;
     
     const updatedOrder = await order.save();
     await this.cacheManager.del(`user-orders-${this.context.userId}`);
@@ -385,7 +385,7 @@ export class OrdersService {
       order.promoDiscount = calculation.promoDiscount;
       order.estimatedMinTotal = calculation.estimatedMinTotal;
       order.estimatedMaxTotal = calculation.estimatedMaxTotal;
-      order.total = calculation.estimatedMaxTotal;
+      order.total = calculation.subtotal + calculation.deliveryFee - calculation.promoDiscount;
     }
 
     const updatedOrder = await order.save();

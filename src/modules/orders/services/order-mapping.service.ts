@@ -7,6 +7,8 @@ const DEFAULT_ITEM_IMAGE = 'https://s3.us-central-1.wasabisys.com/ys-uploads/def
 @Injectable()
 export class OrderMappingService {
   toCreateData(createOrderDto: CreateOrderDto, calculation: OrderCalculationResponseDto, userId: string, service: any) {
+    const total = calculation.subtotal + calculation.deliveryFee - calculation.promoDiscount;
+    
     return {
       orderNumber: `YRS${Date.now().toString().slice(-6)}`,
       status: OrderStatus.DRAFT,
@@ -33,7 +35,7 @@ export class OrderMappingService {
       promoDiscount: calculation.promoDiscount,
       estimatedMinTotal: calculation.estimatedMinTotal,
       estimatedMaxTotal: calculation.estimatedMaxTotal,
-      total: calculation.estimatedMaxTotal,
+      total: total,
       currency: calculation.currency,
     };
   }
