@@ -24,7 +24,7 @@ export class UploadService {
     });
   }
 
-  async uploadImage(file: Express.Multer.File): Promise<string> {
+  async uploadImage(file: Express.Multer.File & { buffer: Buffer }): Promise<string> {
     if (!file) {
       throw new BadRequestException('No file provided');
     }

@@ -23,7 +23,7 @@ export class UploadController {
     },
   })
   @UseInterceptors(FileInterceptor('file'))
-  async uploadImage(@UploadedFile() file: Express.Multer.File) {
+  async uploadImage(@UploadedFile() file: Express.Multer.File & { buffer: Buffer }) {
     if (!file) {
       throw new BadRequestException('No file uploaded');
     }
