@@ -28,6 +28,7 @@ import { OrdersRepository } from "../repositories/orders.repository";
 import { OrderMappingService } from "./order-mapping.service";
 import { PaymentMethodsService } from "./payment-methods.service";
 import { OrderStatus } from "../schemas/order.schema";
+import { Service } from "src/modules/services/schemas/service.schema";
 
 @Injectable()
 export class OrdersService {
@@ -464,7 +465,9 @@ export class OrdersService {
         vendorServices,
       );
       const vendorService = vendorServices.find(
-        (vs) => vs.serviceId.toString() === serviceId.toString(),
+        (vs) =>
+          (vs.serviceId as unknown as Service)._id.toString() ===
+          serviceId.toString(),
       );
 
       if (!vendorService || !vendorService.isAvailable) {
