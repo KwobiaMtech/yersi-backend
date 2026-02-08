@@ -92,8 +92,10 @@ export class OrdersService {
           await this.vendorServiceRepository.findByVendorId(
             calculateDto.vendorId,
           );
-        vendorService = vendorServices.find(
-          (vs) => vs.serviceId.toString() === calculateDto.serviceId,
+        const vendorService = vendorServices.find(
+          (vs) =>
+            (vs.serviceId as unknown as Service)._id.toString() ===
+            calculateDto.serviceId.toString(),
         );
 
         if (!vendorService || !vendorService.isAvailable) {
@@ -229,8 +231,14 @@ export class OrdersService {
           await this.vendorServiceRepository.findByVendorId(
             createOrderDto.vendorId,
           );
+        // const vendorService = vendorServices.find(
+        //   (vs) => vs.serviceId.toString() === createOrderDto.serviceId,
+        // );
+
         const vendorService = vendorServices.find(
-          (vs) => vs.serviceId.toString() === createOrderDto.serviceId,
+          (vs) =>
+            (vs.serviceId as unknown as Service)._id.toString() ===
+            createOrderDto.serviceId.toString(),
         );
 
         if (!vendorService || !vendorService.isAvailable) {
@@ -385,8 +393,14 @@ export class OrdersService {
 
     console.log("Vendor Services for Vendor ID", vendorId, vendorServices);
 
+    // const vendorService = vendorServices.find(
+    //   (vs) => vs.serviceId.toString() === order.serviceId.toString(),
+    // );
+
     const vendorService = vendorServices.find(
-      (vs) => vs.serviceId.toString() === order.serviceId.toString(),
+      (vs) =>
+        (vs.serviceId as unknown as Service)._id.toString() ===
+        order.serviceId.toString(),
     );
 
     if (!vendorService || !vendorService.isAvailable) {
@@ -459,28 +473,11 @@ export class OrdersService {
       const vendorServices = await this.vendorServiceRepository.findByVendorId(
         updateDto.vendorId,
       );
-      console.log(
-        "Vendor Services for Vendor ID",
-        updateDto.vendorId,
-        vendorServices,
-      );
-
-      console.log("Looking for service ID:", serviceId.toString());
-      console.log(
-        "Vendor Services:",
-        vendorServices.map((vs) => ({
-          serviceId: vs.serviceId.toString(),
-          isAvailable: vs.isAvailable,
-        })),
-      );
       const vendorService = vendorServices.find(
         (vs) =>
           (vs.serviceId as unknown as Service)._id.toString() ===
           serviceId.toString(),
       );
-
-      console.log("vendorService found:", vendorService);
-
       if (!vendorService || !vendorService.isAvailable) {
         throw new BadRequestException(
           `Vendor does not offer this service or service is unavailable`,
