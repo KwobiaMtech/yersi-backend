@@ -458,6 +458,11 @@ export class OrdersService {
       const vendorServices = await this.vendorServiceRepository.findByVendorId(
         updateDto.vendorId,
       );
+      console.log(
+        "Vendor Services for Vendor ID",
+        updateDto.vendorId,
+        vendorServices,
+      );
       const vendorService = vendorServices.find(
         (vs) => vs.serviceId.toString() === serviceId.toString(),
       );
