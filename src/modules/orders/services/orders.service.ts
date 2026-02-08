@@ -464,11 +464,22 @@ export class OrdersService {
         updateDto.vendorId,
         vendorServices,
       );
+
+      console.log("Looking for service ID:", serviceId.toString());
+      console.log(
+        "Vendor Services:",
+        vendorServices.map((vs) => ({
+          serviceId: vs.serviceId.toString(),
+          isAvailable: vs.isAvailable,
+        })),
+      );
       const vendorService = vendorServices.find(
         (vs) =>
           (vs.serviceId as unknown as Service)._id.toString() ===
           serviceId.toString(),
       );
+
+      console.log("vendorService found:", vendorService);
 
       if (!vendorService || !vendorService.isAvailable) {
         throw new BadRequestException(
