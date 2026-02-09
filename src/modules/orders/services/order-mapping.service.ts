@@ -42,6 +42,7 @@ export class OrderMappingService {
 
   toResponse(order: Order) {
     const plainOrder = order.toObject ? order.toObject() : order;
+    const isVendorPopulated = plainOrder.vendorId && typeof plainOrder.vendorId === 'object' && plainOrder.vendorId._id;
     
     return {
       id: plainOrder._id?.toString() || plainOrder.id,
@@ -49,7 +50,17 @@ export class OrderMappingService {
       status: plainOrder.status,
       userId: plainOrder.userId?.toString(),
       serviceId: plainOrder.serviceId,
-      vendorId: plainOrder.vendorId?.toString(),
+      vendorId: isVendorPopulated ? plainOrder.vendorId._id.toString() : plainOrder.vendorId?.toString(),
+      vendor: isVendorPopulated ? {
+        id: plainOrder.vendorId._id.toString(),
+        name: plainOrder.vendorId.name,
+        businessName: plainOrder.vendorId.businessName,
+        phone: plainOrder.vendorId.phone,
+        email: plainOrder.vendorId.email,
+        deliveryFee: plainOrder.vendorId.deliveryFee,
+        rating: plainOrder.vendorId.rating,
+        estimatedPickupTime: plainOrder.vendorId.estimatedPickupTime,
+      } : null,
       items: plainOrder.items.map(item => ({
         id: item._id?.toString(),
         itemId: item.itemId,
